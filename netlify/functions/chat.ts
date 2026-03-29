@@ -257,20 +257,25 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
       }
 
       const model = models[attempt];
+      // Search Grounding only on gemini-2.5-flash (has 1,500/day quota); lighter models don't support it
+      const requestBody: Record<string, unknown> = {
+        system_instruction: { parts: [{ text: finalSystemPrompt }] },
+        contents: geminiContents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 8192,
+        },
+      };
+      if (attempt === 0) {
+        requestBody.tools = [{ google_search: {} }];
+      }
+
       const geminiResponse = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: finalSystemPrompt }] },
-            contents: geminiContents,
-            tools: [{ google_search: {} }],
-            generationConfig: {
-              temperature: 0.7,
-              maxOutputTokens: 8192,
-            },
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -290,8 +295,8 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
       const errText = await geminiResponse.text();
       console.error(`Gemini ${model} error (${lastStatus}):`, errText);
 
-      // Retry on rate-limit (429), model not found (404), or overloaded (503)
-      if (lastStatus !== 429 && lastStatus !== 404 && lastStatus !== 503) break;
+      // Retry on rate-limit (429), not found (404), overloaded (503), or bad request (400)
+      if (lastStatus !== 429 && lastStatus !== 404 && lastStatus !== 503 && lastStatus !== 400) break;
     }
 
     const content = lastStatus === 429
