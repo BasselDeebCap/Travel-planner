@@ -7,9 +7,10 @@ interface TopNavProps {
   onPageChange: (page: Page) => void;
   cabinMode: CabinMode;
   onToggleCabin: () => void;
+  onResetPlans: () => void;
 }
 
-export default function TopNav({ activePage, onPageChange, cabinMode, onToggleCabin }: TopNavProps) {
+export default function TopNav({ activePage, onPageChange, cabinMode, onToggleCabin, onResetPlans }: TopNavProps) {
   const pages: { id: Page; label: string }[] = [
     { id: 'plan1', label: 'Plan 1 · Palawan' },
     { id: 'plan2', label: 'Plan 2 · Heritage' },
@@ -43,6 +44,9 @@ export default function TopNav({ activePage, onPageChange, cabinMode, onToggleCa
         </label>
         <span className="cabin-label">{cabinMode === 'biz' ? 'BIZ' : 'ECO'}</span>
       </div>
+      <button className="nav-btn reset-btn" onClick={onResetPlans} title="Reset plans to defaults">
+        ↺ Reset
+      </button>
     </nav>
   );
 }

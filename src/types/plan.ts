@@ -112,4 +112,23 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  planEdit?: PlanEditPayload | null;
+  applied?: boolean;
+}
+
+// ── Plan Edit types (AI-driven plan modifications) ──
+
+export interface PlanEditPayload {
+  targetPlan: 'plan1' | 'plan2';
+  cabinTarget?: 'biz' | 'eco' | 'both';
+  planInfo?: Partial<Pick<PlanInfo, 'title' | 'dateRange' | 'tags' | 'mapTitle' | 'mapSubtitle' | 'bizCabinMsg' | 'ecoCabinMsg'>> & {
+    stops?: MapStop[];
+    internalRoutes?: InternalRoute[];
+    phases?: PhaseData[];
+  };
+  cabinData?: {
+    airline_cards?: AirlineCard[];
+    budget?: BudgetItem[];
+  };
+  description: string; // Human-readable summary of what changed
 }

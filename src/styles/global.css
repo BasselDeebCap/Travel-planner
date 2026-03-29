@@ -34,16 +34,15 @@ body {
 .app-content {
   display: flex;
   flex: 1;
-  position: relative;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .main-content {
   flex: 1;
-  transition: margin-right 0.3s ease;
-}
-
-.main-content.chat-open {
-  margin-right: 380px;
+  min-width: 0;
+  overflow-y: auto;
+  height: calc(100vh - 48px);
 }
 
 /* ── TOP NAV ── */
@@ -164,6 +163,18 @@ input:checked + .toggle-slider:before {
   font-size: 12px;
   font-weight: 700;
   min-width: 60px;
+}
+
+.reset-btn {
+  margin-left: 8px;
+  color: var(--light-blue) !important;
+  font-size: 11px !important;
+  opacity: 0.7;
+}
+
+.reset-btn:hover {
+  opacity: 1;
+  color: #ffa0a0 !important;
 }
 
 /* ── PAGES ── */
@@ -665,10 +676,6 @@ tr:nth-child(even) td {
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  .main-content.chat-open {
-    margin-right: 0;
-  }
-
   .airline-cards,
   .comp-feature-grid,
   .budget-cards {

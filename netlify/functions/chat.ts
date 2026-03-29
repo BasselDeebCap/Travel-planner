@@ -1,5 +1,5 @@
-// Netlify serverless function — proxies chat requests to OpenRouter API
-// The OPENROUTER_API_KEY env var must be set in the Netlify dashboard
+// Netlify serverless function — proxies chat requests to Google Gemini API
+// The GEMINI_API_KEY env var must be set in the Netlify dashboard
 
 interface ChatRequestBody {
   messages: { role: string; content: string }[];
@@ -26,12 +26,12 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return new Response(
       JSON.stringify({
         content:
-          '⚠️ The AI service is not configured yet. Please set the OPENROUTER_API_KEY environment variable in your Netlify dashboard.',
+          '⚠️ The AI service is not configured yet. Please set the GEMINI_API_KEY environment variable in your Netlify dashboard.',
       }),
       { status: 200, headers }
     );
@@ -57,6 +57,11 @@ export default async function handler(req: Request): Promise<Response> {
   // Limit message history to prevent abuse
   const recentMessages = body.messages.slice(-20);
 
+  // Build a compact summary of the current plan state so the AI knows what to edit
+  const planSummary = body.planContext
+    ? `\n\nCurrent plan data (JSON) the user is viewing:\n${JSON.stringify(body.planContext, null, 0).slice(0, 6000)}`
+    : '';
+
   const systemPrompt = `You are an expert travel planning assistant specializing in Philippines travel. You are helping plan a trip for December 2026 – January 2027, departing from London.
 
 There are two plans being compared:
@@ -66,87 +71,105 @@ There are two plans being compared:
 You should:
 1. Answer questions about either plan in detail — activities, hotels, costs, transport, weather, safety, visa, packing, etc.
 2. Give honest, balanced comparisons when asked.
-3. Suggest itinerary modifications when asked (e.g., swapping days, adding activities, changing hotels).
+3. **When the user asks you to CHANGE, UPDATE, ADD, REMOVE, or MODIFY anything in a plan** — you MUST include a plan-edit JSON block so the app can apply the changes. See format below.
 4. Be concise but informative. Use bullet points for lists.
-5. If you suggest a plan change, describe it clearly.
-6. You know Philippine geography, culture, cuisine, and travel logistics well.
-7. Costs are quoted in GBP (£). The trip is during Philippine dry/cool season (Dec–Jan).
+5. You know Philippine geography, culture, cuisine, and travel logistics well.
+6. Costs are quoted in GBP (£). The trip is during Philippine dry/cool season (Dec–Jan).
+
+## PLAN EDIT FORMAT
+
+When the user asks for a change to a plan, respond with:
+1. A human-readable explanation of what you're changing and why
+2. Then append EXACTLY this block (no extra text between the markers):
+
+:::plan-edit
+{JSON object}
+:::
+
+The JSON object must follow this exact schema:
+{
+  "targetPlan": "plan1" or "plan2",
+  "cabinTarget": "biz" | "eco" | "both",
+  "description": "Brief summary of changes (shown to user as a label)",
+  "planInfo": {
+    // Include ONLY fields you are changing. Omit fields you're not changing.
+    "title": "...",
+    "dateRange": "...",
+    "tags": "...",
+    "mapTitle": "...",
+    "mapSubtitle": "...",
+    "bizCabinMsg": "...",
+    "ecoCabinMsg": "...",
+    "stops": [ { "name": "...", "lat": number, "lng": number, "color": "#hex", "days": "Days X–Y", "desc": "..." } ],
+    "internalRoutes": [ { "route": "A → B", "operator": "...", "duration": "...", "cost": "£XX" } ],
+    "phases": [ { "title": "PHASE N: ...", "subtitle": "...", "bgColor": "#hex or omit", "days": [ { "dayNum": N, "date": "Day DD Mon", "title": "...", "content": "<p>HTML content for the day</p>" } ] } ]
+  },
+  "cabinData": {
+    // Include ONLY if changing flights or budget
+    "airline_cards": [ { "name": "...", "badge": "...", "badgeClass": "", "route": "...", "via": "...", "duration": "...", "aircraft": "...", "fare": "£X–£Y" } ],
+    "budget": [ { "label": "...", "val": "£X–£Y" }, ..., { "label": "TOTAL (per person)", "val": "£X–£Y", "total": true } ]
+  }
+}
+
+CRITICAL RULES:
+- If you are only modifying the itinerary (days/phases), only include "planInfo" with "phases". Do NOT include unchanged fields.
+- If you are only modifying flights/budget, only include "cabinData". Do NOT include unchanged fields.
+- When modifying phases, you MUST include ALL phases and ALL days within each phase (the entire phases array replaces the current one).
+- When modifying stops or internalRoutes, include the COMPLETE array (it replaces the current one).
+- "description" field is required — keep it short, e.g. "Added Boracay day trip on Day 5"
+- The day content field uses HTML: use <p>, <strong>, <em> tags. Use class="time" for time markers, class="hotel-note" for hotel info, class="tip-box" for tips.
+- Do NOT wrap the JSON in markdown code fences inside the :::plan-edit block.
+- For questions that don't require changes (e.g. "what's the weather like?"), just respond normally WITHOUT the :::plan-edit block.
+${planSummary}
 
 Keep responses focused and practical. Be warm and enthusiastic about the Philippines!`;
 
-  // Try multiple free models in order — if one fails, try the next
-  const models = [
-    'google/gemma-3-27b-it:free',
-    'google/gemma-3-12b-it:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'nousresearch/hermes-3-llama-3.1-405b:free',
-    'nvidia/nemotron-3-super-120b-a12b:free',
-    'qwen/qwen3-next-80b-a3b-instruct:free',
-    'arcee-ai/trinity-large-preview:free',
-    'stepfun/step-3.5-flash:free',
-  ];
-
   try {
-    let lastStatus = 0;
-    let lastError = '';
+    // Convert chat messages to Gemini format
+    const geminiContents = recentMessages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }],
+    }));
 
-    for (const model of models) {
-      // Gemma models don't support system messages — merge into first user message instead
-      const isGemma = model.includes('gemma');
-      let messages;
-      if (isGemma) {
-        const firstUserMsg = recentMessages[0];
-        messages = [
-          { role: 'user', content: `[Instructions: ${systemPrompt}]\n\n${firstUserMsg?.content || ''}` },
-          ...recentMessages.slice(1),
-        ];
-      } else {
-        messages = [
-          { role: 'system', content: systemPrompt },
-          ...recentMessages,
-        ];
-      }
-
-      const openRouterResponse = await fetch(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://philippines-travel-planner.netlify.app',
-            'X-Title': 'Philippines Travel Planner',
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: geminiContents,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 4096,
           },
-          body: JSON.stringify({ model, messages, max_tokens: 1024, temperature: 0.7 }),
-        }
+        }),
+      }
+    );
+
+    if (!geminiResponse.ok) {
+      const errText = await geminiResponse.text();
+      console.error(`Gemini API error (${geminiResponse.status}):`, errText);
+
+      if (geminiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ content: '⚠️ Rate limited by the AI service. Please wait a moment and try again.' }),
+          { status: 200, headers }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ content: `⚠️ AI service returned an error (${geminiResponse.status}). Please try again later.` }),
+        { status: 200, headers }
       );
-
-      if (openRouterResponse.ok) {
-        const data = await openRouterResponse.json();
-        const content =
-          data.choices?.[0]?.message?.content ||
-          'Sorry, I could not generate a response. Please try again.';
-        return new Response(JSON.stringify({ content }), { status: 200, headers });
-      }
-
-      lastStatus = openRouterResponse.status;
-      lastError = await openRouterResponse.text();
-      console.error(`Model ${model} failed (${lastStatus}):`, lastError);
-
-      // Only retry on rate-limit (429), bad-request (400), or model-not-found (404).
-      if (lastStatus !== 429 && lastStatus !== 400 && lastStatus !== 404) {
-        break;
-      }
     }
 
-    return new Response(
-      JSON.stringify({
-        content: lastStatus === 429
-          ? '⚠️ All AI models are currently rate-limited. Please wait a minute and try again.'
-          : `⚠️ AI service returned an error (${lastStatus}). Please try again later.`,
-      }),
-      { status: 200, headers }
-    );
+    const data = await geminiResponse.json();
+    const content =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      'Sorry, I could not generate a response. Please try again.';
+
+    return new Response(JSON.stringify({ content }), { status: 200, headers });
   } catch (err) {
     console.error('Chat function error:', err);
     return new Response(
