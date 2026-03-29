@@ -7,3 +7,6 @@ dist
 functions/lib
 functions/node_modules
 firebase-debug.log
+# Ignore Netlify artifacts
+netlify/
+netlify.toml
