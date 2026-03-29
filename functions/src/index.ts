@@ -21,7 +21,7 @@ async function searchFlights(
   query: string,
   cabinMode: string,
 ): Promise<SerpFlightResult | null> {
-  if (!serpKey) return null;
+  if (!serpKey) throw new Error("SERPAPI_KEY is required for flight data. Please set the SERPAPI_KEY secret.");
 
   const departureId = "LHR";
   const arrivalId = "MNL";
@@ -90,10 +90,18 @@ export const chat = onRequest(
       return;
     }
 
+
     const apiKey = process.env.GEMINI_API_KEY;
+    const serpKey = process.env.SERPAPI_KEY;
     if (!apiKey) {
       res.json({
         content: "⚠️ The AI service is not configured yet. Please set the GEMINI_API_KEY secret.",
+      });
+      return;
+    }
+    if (!serpKey) {
+      res.json({
+        content: "⚠️ Real flight prices require the SERPAPI_KEY secret. Please set it in your deployment environment.",
       });
       return;
     }
@@ -193,7 +201,7 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
       const lastUserMsg = recentMessages[recentMessages.length - 1]?.content || "";
       let flightContext = "";
       if (FLIGHT_KEYWORDS.test(lastUserMsg)) {
-        const flightData = await searchFlights(process.env.SERPAPI_KEY || "", lastUserMsg, cabinMode as string);
+        const flightData = await searchFlights(serpKey, lastUserMsg, cabinMode as string);
         if (flightData && flightData.flights.length > 0) {
           flightContext = `\n\n## REAL FLIGHT DATA (from Google Flights — use these prices, they are accurate)\n`;
           flightContext += flightData.flights

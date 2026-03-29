@@ -31,7 +31,9 @@ jobs:
 
       # Deploy Cloud Functions separately
       - name: Create functions env file
-        run: echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > functions/.env
+        run: |
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > functions/.env
+          echo "SERPAPI_KEY=${{ secrets.SERPAPI_KEY }}" >> functions/.env
 
       - name: Deploy Functions
         uses: w9jds/firebase-action@master
