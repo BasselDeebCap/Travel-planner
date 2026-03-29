@@ -131,43 +131,52 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
       parts: [{ text: msg.content }],
     }));
 
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: geminiContents,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 4096,
-          },
-        }),
-      }
-    );
+    // Retry logic for rate limits (429)
+    const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash'];
+    let lastStatus = 0;
 
-    if (!geminiResponse.ok) {
-      const errText = await geminiResponse.text();
-      console.error(`Gemini API error (${geminiResponse.status}):`, errText);
-
-      if (geminiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ content: '⚠️ Rate limited by the AI service. Please wait a moment and try again.' }),
-          { status: 200, headers }
-        );
+    for (let attempt = 0; attempt < models.length; attempt++) {
+      if (attempt > 0) {
+        // Wait before retrying (2s, then 4s)
+        await new Promise(r => setTimeout(r, 2000 * attempt));
       }
 
-      return new Response(
-        JSON.stringify({ content: `⚠️ AI service returned an error (${geminiResponse.status}). Please try again later.` }),
-        { status: 200, headers }
+      const model = models[attempt];
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: geminiContents,
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 4096,
+            },
+          }),
+        }
       );
+
+      if (geminiResponse.ok) {
+        const data = await geminiResponse.json();
+        const content =
+          data.candidates?.[0]?.content?.parts?.[0]?.text ||
+          'Sorry, I could not generate a response. Please try again.';
+        return new Response(JSON.stringify({ content }), { status: 200, headers });
+      }
+
+      lastStatus = geminiResponse.status;
+      const errText = await geminiResponse.text();
+      console.error(`Gemini ${model} error (${lastStatus}):`, errText);
+
+      // Only retry on rate-limit; break on other errors
+      if (lastStatus !== 429) break;
     }
 
-    const data = await geminiResponse.json();
-    const content =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      'Sorry, I could not generate a response. Please try again.';
+    const content = lastStatus === 429
+      ? '⚠️ All AI models are currently rate-limited. Please wait a minute and try again.'
+      : `⚠️ AI service returned an error (${lastStatus}). Please try again later.`;
 
     return new Response(JSON.stringify({ content }), { status: 200, headers });
   } catch (err) {

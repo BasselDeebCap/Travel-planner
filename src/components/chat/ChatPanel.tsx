@@ -2,6 +2,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import type { ChatMessage, PlanEditPayload } from '../../types/plan';
 import '../../styles/chat.css';
 
+const MIN_WIDTH = 300;
+const MAX_WIDTH = 700;
+const DEFAULT_WIDTH = 380;
+
 interface ChatPanelProps {
   expanded: boolean;
   onToggleExpand: () => void;
@@ -35,8 +39,6 @@ function parsePlanEdit(content: string): { text: string; edit: PlanEditPayload |
   return { text: content, edit: null };
 }
 
-type PanelSize = 'normal' | 'wide' | 'collapsed';
-
 export default function ChatPanel({ expanded, onToggleExpand, planContext, onApplyChanges }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -48,8 +50,36 @@ export default function ChatPanel({ expanded, onToggleExpand, planContext, onApp
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [panelSize, setPanelSize] = useState<PanelSize>('normal');
+  const [panelWidth, setPanelWidth] = useState(DEFAULT_WIDTH);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const isDragging = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Drag-to-resize handlers
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    const handleDragMove = (ev: MouseEvent) => {
+      if (!isDragging.current) return;
+      const newWidth = window.innerWidth - ev.clientX;
+      setPanelWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth)));
+    };
+
+    const handleDragEnd = () => {
+      isDragging.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', handleDragMove);
+      window.removeEventListener('mouseup', handleDragEnd);
+    };
+
+    window.addEventListener('mousemove', handleDragMove);
+    window.addEventListener('mouseup', handleDragEnd);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -133,29 +163,11 @@ export default function ChatPanel({ expanded, onToggleExpand, planContext, onApp
     );
   };
 
-  const sizeClass = panelSize === 'collapsed'
-    ? 'collapsed'
-    : panelSize === 'wide'
-      ? 'expanded-wide'
-      : '';
-
-  // When not expanded (from App), show collapsed strip
-  if (!expanded) {
+  // When not expanded (from App) or self-collapsed
+  if (!expanded || isCollapsed) {
     return (
       <aside className="chat-panel collapsed">
-        <div className="chat-collapsed-strip" onClick={onToggleExpand}>
-          <span className="chat-expand-icon">💬</span>
-          <span className="chat-collapsed-label">AI Chat</span>
-        </div>
-      </aside>
-    );
-  }
-
-  // When panel is self-collapsed (size toggle)
-  if (panelSize === 'collapsed') {
-    return (
-      <aside className={`chat-panel ${sizeClass}`}>
-        <div className="chat-collapsed-strip" onClick={() => setPanelSize('normal')}>
+        <div className="chat-collapsed-strip" onClick={() => { if (!expanded) onToggleExpand(); else setIsCollapsed(false); }}>
           <span className="chat-expand-icon">💬</span>
           <span className="chat-collapsed-label">AI Chat</span>
         </div>
@@ -164,25 +176,23 @@ export default function ChatPanel({ expanded, onToggleExpand, planContext, onApp
   }
 
   return (
-    <aside className={`chat-panel ${sizeClass}`}>
+    <aside
+      className="chat-panel"
+      ref={panelRef}
+      style={{ width: panelWidth, minWidth: panelWidth }}
+    >
+      {/* Drag handle on left edge */}
+      <div className="chat-drag-handle" onMouseDown={handleDragStart} />
+
       <div className="chat-header">
         <span className="chat-header-left">🤖 AI Travel Assistant</span>
-        <div className="chat-header-actions">
-          <button
-            className={`chat-header-btn ${panelSize === 'wide' ? 'active' : ''}`}
-            onClick={() => setPanelSize(panelSize === 'wide' ? 'normal' : 'wide')}
-            title={panelSize === 'wide' ? 'Normal width' : 'Expand wider'}
-          >
-            {panelSize === 'wide' ? '◁' : '▷'}
-          </button>
-          <button
-            className="chat-header-btn"
-            onClick={() => setPanelSize('collapsed')}
-            title="Collapse chat"
-          >
-            ▸▸
-          </button>
-        </div>
+        <button
+          className="chat-header-btn"
+          onClick={() => setIsCollapsed(true)}
+          title="Collapse chat"
+        >
+          ✕
+        </button>
       </div>
 
       <div className="chat-messages">

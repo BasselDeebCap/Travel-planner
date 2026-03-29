@@ -1,7 +1,7 @@
 /* ── CHAT SIDEBAR (flex child of .app-content) ── */
 .chat-panel {
   width: 380px;
-  min-width: 380px;
+  min-width: 300px;
   height: calc(100vh - 48px); /* below top-nav */
   position: sticky;
   top: 48px;
@@ -10,7 +10,6 @@
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease, min-width 0.3s ease;
   flex-shrink: 0;
   z-index: 50;
 }
@@ -21,9 +20,23 @@
   overflow: hidden;
 }
 
-.chat-panel.expanded-wide {
-  width: 520px;
-  min-width: 520px;
+/* ── DRAG HANDLE ── */
+.chat-drag-handle {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 60;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.chat-drag-handle:hover,
+.chat-drag-handle:active {
+  background: var(--blue);
+  opacity: 0.5;
 }
 
 /* ── COLLAPSED STRIP ── */
@@ -75,7 +88,6 @@
 .chat-header-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
 }
 
 .chat-header-btn {
@@ -322,10 +334,5 @@
     width: 44px;
     min-width: 44px;
     transform: translateX(0);
-  }
-
-  .chat-panel.expanded-wide {
-    width: 100%;
-    min-width: 100%;
   }
 }
