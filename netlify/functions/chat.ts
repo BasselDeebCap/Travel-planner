@@ -74,46 +74,69 @@ You should:
 
 Keep responses focused and practical. Be warm and enthusiastic about the Philippines!`;
 
-  try {
-    const openRouterResponse = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://philippines-travel-planner.netlify.app',
-          'X-Title': 'Philippines Travel Planner',
-        },
-        body: JSON.stringify({
-          model: 'google/gemma-3-27b-it:free',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            ...recentMessages,
-          ],
-          max_tokens: 1024,
-          temperature: 0.7,
-        }),
-      }
-    );
+  // Try multiple free models in order — if one is rate-limited, try the next
+  const models = [
+    'google/gemma-3-27b-it:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'nousresearch/hermes-3-llama-3.1-405b:free',
+    'google/gemma-3-12b-it:free',
+    'qwen/qwen3-next-80b-a3b-instruct:free',
+  ];
 
-    if (!openRouterResponse.ok) {
-      const errorText = await openRouterResponse.text();
-      console.error('OpenRouter error:', openRouterResponse.status, errorText);
-      return new Response(
-        JSON.stringify({
-          content: `⚠️ AI service returned an error (${openRouterResponse.status}). Please check your API key and try again.`,
-        }),
-        { status: 200, headers }
+  try {
+    const payload = {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...recentMessages,
+      ],
+      max_tokens: 1024,
+      temperature: 0.7,
+    };
+
+    let lastStatus = 0;
+    let lastError = '';
+
+    for (const model of models) {
+      const openRouterResponse = await fetch(
+        'https://openrouter.ai/api/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://philippines-travel-planner.netlify.app',
+            'X-Title': 'Philippines Travel Planner',
+          },
+          body: JSON.stringify({ model, ...payload }),
+        }
       );
+
+      if (openRouterResponse.ok) {
+        const data = await openRouterResponse.json();
+        const content =
+          data.choices?.[0]?.message?.content ||
+          'Sorry, I could not generate a response. Please try again.';
+        return new Response(JSON.stringify({ content }), { status: 200, headers });
+      }
+
+      lastStatus = openRouterResponse.status;
+      lastError = await openRouterResponse.text();
+      console.error(`Model ${model} failed (${lastStatus}):`, lastError);
+
+      // Only retry on rate-limit (429) or model-not-found (404). Other errors (401, 500) won't be fixed by switching models.
+      if (lastStatus !== 429 && lastStatus !== 404) {
+        break;
+      }
     }
 
-    const data = await openRouterResponse.json();
-    const content =
-      data.choices?.[0]?.message?.content ||
-      'Sorry, I could not generate a response. Please try again.';
-
-    return new Response(JSON.stringify({ content }), { status: 200, headers });
+    return new Response(
+      JSON.stringify({
+        content: lastStatus === 429
+          ? '⚠️ All AI models are currently rate-limited. Please wait a minute and try again.'
+          : `⚠️ AI service returned an error (${lastStatus}). Please try again later.`,
+      }),
+      { status: 200, headers }
+    );
   } catch (err) {
     console.error('Chat function error:', err);
     return new Response(
