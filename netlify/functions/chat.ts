@@ -74,29 +74,39 @@ You should:
 
 Keep responses focused and practical. Be warm and enthusiastic about the Philippines!`;
 
-  // Try multiple free models in order — if one is rate-limited, try the next
+  // Try multiple free models in order — if one fails, try the next
   const models = [
     'google/gemma-3-27b-it:free',
+    'google/gemma-3-12b-it:free',
     'meta-llama/llama-3.3-70b-instruct:free',
     'nousresearch/hermes-3-llama-3.1-405b:free',
-    'google/gemma-3-12b-it:free',
+    'nvidia/nemotron-3-super-120b-a12b:free',
     'qwen/qwen3-next-80b-a3b-instruct:free',
+    'arcee-ai/trinity-large-preview:free',
+    'stepfun/step-3.5-flash:free',
   ];
 
   try {
-    const payload = {
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...recentMessages,
-      ],
-      max_tokens: 1024,
-      temperature: 0.7,
-    };
-
     let lastStatus = 0;
     let lastError = '';
 
     for (const model of models) {
+      // Gemma models don't support system messages — merge into first user message instead
+      const isGemma = model.includes('gemma');
+      let messages;
+      if (isGemma) {
+        const firstUserMsg = recentMessages[0];
+        messages = [
+          { role: 'user', content: `[Instructions: ${systemPrompt}]\n\n${firstUserMsg?.content || ''}` },
+          ...recentMessages.slice(1),
+        ];
+      } else {
+        messages = [
+          { role: 'system', content: systemPrompt },
+          ...recentMessages,
+        ];
+      }
+
       const openRouterResponse = await fetch(
         'https://openrouter.ai/api/v1/chat/completions',
         {
@@ -107,7 +117,7 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
             'HTTP-Referer': 'https://philippines-travel-planner.netlify.app',
             'X-Title': 'Philippines Travel Planner',
           },
-          body: JSON.stringify({ model, ...payload }),
+          body: JSON.stringify({ model, messages, max_tokens: 1024, temperature: 0.7 }),
         }
       );
 
@@ -123,8 +133,8 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
       lastError = await openRouterResponse.text();
       console.error(`Model ${model} failed (${lastStatus}):`, lastError);
 
-      // Only retry on rate-limit (429) or model-not-found (404). Other errors (401, 500) won't be fixed by switching models.
-      if (lastStatus !== 429 && lastStatus !== 404) {
+      // Only retry on rate-limit (429), bad-request (400), or model-not-found (404).
+      if (lastStatus !== 429 && lastStatus !== 400 && lastStatus !== 404) {
         break;
       }
     }
