@@ -15,26 +15,46 @@ interface ChatPanelProps {
 
 /** Extract a plan-edit JSON block from AI response text */
 function parsePlanEdit(content: string): { text: string; edit: PlanEditPayload | null } {
-  const marker = ':::plan-edit';
-  const startIdx = content.indexOf(marker);
-  if (startIdx === -1) return { text: content, edit: null };
+  // Try multiple patterns the AI might use
+  const patterns = [
+    /:::plan-edit\s*\n([\s\S]*?)\n:::/,          // standard :::plan-edit ... :::
+    /:::plan-edit\s*\n([\s\S]*?)$/,                // no closing ::: (truncated)
+    /```json\s*\n([\s\S]*?)\n```/,                 // ```json ... ```
+    /```\s*\n(\{[\s\S]*?\})\s*\n```/,              // ``` { ... } ```
+  ];
 
-  const jsonStart = content.indexOf('\n', startIdx) + 1;
-  const endIdx = content.indexOf(':::', jsonStart);
-  if (endIdx === -1) return { text: content, edit: null };
+  let jsonStr: string | null = null;
+  let textPart = content;
 
-  const jsonStr = content.slice(jsonStart, endIdx).trim();
-  const textPart = (content.slice(0, startIdx) + content.slice(endIdx + 3)).trim();
+  for (const pattern of patterns) {
+    const match = content.match(pattern);
+    if (match) {
+      jsonStr = match[1].trim();
+      // Remove the matched block from the display text
+      textPart = content.replace(match[0], '').trim();
+      break;
+    }
+  }
+
+  if (!jsonStr) return { text: content, edit: null };
 
   try {
-    // Strip markdown code fences if the LLM wraps the JSON
+    // Strip any remaining markdown fences
     const cleaned = jsonStr.replace(/^```json?\s*/i, '').replace(/\s*```$/, '');
     const parsed = JSON.parse(cleaned);
+
     if (parsed && parsed.targetPlan && parsed.description) {
       return { text: textPart, edit: parsed as PlanEditPayload };
     }
   } catch {
-    console.warn('Could not parse plan-edit JSON from AI response');
+    // If the JSON is there but malformed, still hide it from the chat display
+    // and show just the human-readable text
+    const fallbackText = content.replace(/:::plan-edit[\s\S]*?(:::|$)/, '').trim()
+      || content.replace(/```json[\s\S]*?(```|$)/, '').trim();
+    if (fallbackText !== content) {
+      console.warn('Plan-edit JSON found but could not be parsed');
+      return { text: fallbackText + '\n\n⚠️ (Plan changes could not be parsed — try rephrasing your request)', edit: null };
+    }
   }
   return { text: content, edit: null };
 }

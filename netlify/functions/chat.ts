@@ -117,6 +117,7 @@ The JSON object must follow this exact schema:
 }
 
 CRITICAL RULES:
+- **ALWAYS start with a friendly, human-readable explanation** of what you changed and why. Describe the changes to the user BEFORE the :::plan-edit block. The text above the block is what the user sees in the chat bubble.
 - The user is currently viewing **${cabinLabel}** mode. Set "cabinTarget" to "${cabinMode}" unless the user explicitly asks to change both cabin classes.
 - If you are only modifying the itinerary (days/phases), only include "planInfo" with "phases". Do NOT include unchanged fields.
 - If you are only modifying flights/budget, only include "cabinData". Do NOT include unchanged fields.
@@ -127,7 +128,8 @@ CRITICAL RULES:
 - Only include airline_cards appropriate for the current cabin class (${cabinLabel}). Do NOT mix Business and Economy flights.
 - "description" field is required — keep it short, e.g. "Added Boracay day trip on Day 5"
 - The day content field uses HTML: use <p>, <strong>, <em> tags. Use class="time" for time markers, class="hotel-note" for hotel info, class="tip-box" for tips.
-- Do NOT wrap the JSON in markdown code fences inside the :::plan-edit block.
+- Do NOT wrap the JSON in markdown code fences inside the :::plan-edit block. The JSON goes directly after the :::plan-edit line.
+- **cabinData MUST be flat** — put airline_cards and budget arrays directly inside cabinData. Do NOT nest by cabin key. WRONG: { "cabinData": { "biz": { "airline_cards": [...] } } }. CORRECT: { "cabinData": { "airline_cards": [...], "budget": [...] } }. The "cabinTarget" field already specifies which cabin class is affected.
 - For questions that don't require changes (e.g. "what's the weather like?"), just respond normally WITHOUT the :::plan-edit block.
 ${planSummary}
 
@@ -162,7 +164,7 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
             contents: geminiContents,
             generationConfig: {
               temperature: 0.7,
-              maxOutputTokens: 4096,
+              maxOutputTokens: 8192,
             },
           }),
         }
