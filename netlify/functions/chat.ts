@@ -58,11 +58,16 @@ export default async function handler(req: Request): Promise<Response> {
   const recentMessages = body.messages.slice(-20);
 
   // Build a compact summary of the current plan state so the AI knows what to edit
+  const activePage = (body.planContext as Record<string, unknown>)?.activePage || 'plan1';
+  const cabinMode = (body.planContext as Record<string, unknown>)?.cabinMode || 'biz';
+  const cabinLabel = cabinMode === 'biz' ? 'Business Class' : 'Economy Class';
   const planSummary = body.planContext
     ? `\n\nCurrent plan data (JSON) the user is viewing:\n${JSON.stringify(body.planContext, null, 0).slice(0, 6000)}`
     : '';
 
   const systemPrompt = `You are an expert travel planning assistant specializing in Philippines travel. You are helping plan a trip for December 2026 – January 2027, departing from London.
+
+The user is currently viewing: **${activePage === 'compare' ? 'Compare page' : activePage === 'plan1' ? 'Plan 1 (Palawan)' : 'Plan 2 (Heritage)'}** in **${cabinLabel}** mode.
 
 There are two plans being compared:
 - **Plan 1 (Palawan route):** London → Cebu → Coron → El Nido → Manila → London (16 days). Focus: world-class beaches, lagoons, diving, island hopping, NYE in El Nido.
@@ -112,10 +117,14 @@ The JSON object must follow this exact schema:
 }
 
 CRITICAL RULES:
+- The user is currently viewing **${cabinLabel}** mode. Set "cabinTarget" to "${cabinMode}" unless the user explicitly asks to change both cabin classes.
 - If you are only modifying the itinerary (days/phases), only include "planInfo" with "phases". Do NOT include unchanged fields.
 - If you are only modifying flights/budget, only include "cabinData". Do NOT include unchanged fields.
 - When modifying phases, you MUST include ALL phases and ALL days within each phase (the entire phases array replaces the current one).
 - When modifying stops or internalRoutes, include the COMPLETE array (it replaces the current one).
+- **When changing ANY budget item, you MUST recalculate and include the TOTAL row.** Add up all the budget line items to compute the new total range. The last item MUST be { "label": "TOTAL (per person)", "val": "£X–£Y", "total": true }.
+- **When changing flights (airline_cards), also update the corresponding budget line item for "Intl Flights (return)" with the new fare range, and recalculate the TOTAL.**
+- Only include airline_cards appropriate for the current cabin class (${cabinLabel}). Do NOT mix Business and Economy flights.
 - "description" field is required — keep it short, e.g. "Added Boracay day trip on Day 5"
 - The day content field uses HTML: use <p>, <strong>, <em> tags. Use class="time" for time markers, class="hotel-note" for hotel info, class="tip-box" for tips.
 - Do NOT wrap the JSON in markdown code fences inside the :::plan-edit block.
