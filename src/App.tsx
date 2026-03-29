@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import TopNav from './components/layout/TopNav';
 import PlanPage from './components/plan/PlanPage';
-import ComparePage from './components/compare/ComparePage';
 import ChatPanel from './components/chat/ChatPanel';
 import { CABIN_DATA as DEFAULT_CABIN, PLAN1_INFO as DEFAULT_PLAN1, PLAN2_INFO as DEFAULT_PLAN2 } from './data/travelData';
 import type { CabinMode, PlanInfo, CabinData, PlanEditPayload } from './types/plan';
@@ -21,7 +20,7 @@ function loadFromLS<T>(key: string, fallback: T): T {
 }
 
 export default function App() {
-  const [activePage, setActivePage] = useState<Page>('plan1');
+  const activePage: Page = 'plan1';
   const [cabinMode, setCabinMode] = useState<CabinMode>('biz');
   const [chatExpanded, setChatExpanded] = useState(true);
   const [toast, setToast] = useState('');
@@ -58,7 +57,7 @@ export default function App() {
   }, [showToast]);
 
   const applyPlanChanges = useCallback((edit: PlanEditPayload) => {
-    const { targetPlan, planInfo, cabinData: cabinPatch, cabinTarget = 'both' } = edit;
+    const { targetPlan, planInfo, cabinData: cabinPatch, cabinTarget } = edit;
     const setPlan = targetPlan === 'plan1' ? setPlan1 : setPlan2;
 
     // Merge planInfo fields
@@ -73,23 +72,21 @@ export default function App() {
       }));
     }
 
-    // Merge cabin data (flights + budget)
+    // Merge cabin data — only apply to the specified cabin target (never "both")
     if (cabinPatch) {
       setCabinData(prev => {
         const updated = { ...prev };
         const planKey = targetPlan === 'plan1' ? 'p1' : 'p2';
-        const targets = cabinTarget === 'both' ? (['biz', 'eco'] as const) : [cabinTarget] as const;
+        const mode = cabinTarget === 'biz' || cabinTarget === 'eco' ? cabinTarget : cabinMode;
 
-        for (const mode of targets) {
-          const current = prev[mode][planKey];
-          updated[mode] = {
-            ...prev[mode],
-            [planKey]: {
-              airline_cards: cabinPatch.airline_cards ?? current.airline_cards,
-              budget: cabinPatch.budget ?? current.budget,
-            },
-          };
-        }
+        const current = prev[mode][planKey];
+        updated[mode] = {
+          ...prev[mode],
+          [planKey]: {
+            airline_cards: cabinPatch.airline_cards ?? current.airline_cards,
+            budget: cabinPatch.budget ?? current.budget,
+          },
+        };
         return updated;
       });
     }
@@ -101,27 +98,19 @@ export default function App() {
     <div className="app-layout">
       <TopNav
         activePage={activePage}
-        onPageChange={setActivePage}
+        onPageChange={() => {}}
         cabinMode={cabinMode}
         onToggleCabin={handleToggleCabin}
         onResetPlans={handleResetPlans}
       />
       <div className="app-content">
         <main className="main-content">
-          {activePage === 'plan1' && (
-            <PlanPage plan={plan1} cabinData={currentCabin.p1} cabinMode={cabinMode} />
-          )}
-          {activePage === 'plan2' && (
-            <PlanPage plan={plan2} cabinData={currentCabin.p2} cabinMode={cabinMode} />
-          )}
-          {activePage === 'compare' && (
-            <ComparePage cabinData={currentCabin} cabinMode={cabinMode} />
-          )}
+          <PlanPage plan={plan1} cabinData={currentCabin.p1} cabinMode={cabinMode} />
         </main>
         <ChatPanel
           expanded={chatExpanded}
           onToggleExpand={() => setChatExpanded(prev => !prev)}
-          planContext={{ activePage, cabinMode, plan1, plan2, cabinData }}
+          planContext={{ activePage: 'plan1', cabinMode, plan1, cabinData }}
           onApplyChanges={applyPlanChanges}
         />
       </div>

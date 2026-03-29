@@ -12,9 +12,7 @@ interface TopNavProps {
 
 export default function TopNav({ activePage, onPageChange, cabinMode, onToggleCabin, onResetPlans }: TopNavProps) {
   const pages: { id: Page; label: string }[] = [
-    { id: 'plan1', label: 'Plan 1 · Palawan' },
-    { id: 'plan2', label: 'Plan 2 · Heritage' },
-    { id: 'compare', label: '⚖ Compare' },
+    { id: 'plan1', label: 'Palawan Route' },
   ];
 
   return (
