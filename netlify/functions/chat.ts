@@ -1,9 +1,85 @@
 // Netlify serverless function — proxies chat requests to Google Gemini API
-// The GEMINI_API_KEY env var must be set in the Netlify dashboard
+// Env vars: GEMINI_API_KEY (required), SERPAPI_KEY (optional — enables real flight data)
 
 interface ChatRequestBody {
   messages: { role: string; content: string }[];
   planContext?: unknown;
+}
+
+// ── SerpAPI Google Flights helper ──────────────────────────────────────────────
+const FLIGHT_KEYWORDS = /\b(flight|flights|fly|flying|fare|fares|airline|airlines|ticket|tickets|airfare|book.*(flight|ticket))\b/i;
+
+interface SerpFlightResult {
+  flights: { airline: string; price: string; stops: string; duration: string; departure: string; arrival: string }[];
+  searchUrl: string;
+}
+
+async function searchFlights(
+  query: string,
+  cabinMode: string,
+): Promise<SerpFlightResult | null> {
+  const serpKey = process.env.SERPAPI_KEY;
+  if (!serpKey) return null;
+
+  // Extract route hints from the query — default to London↔Manila if unclear
+  const departureId = 'LHR';
+  const arrivalId = 'MNL';
+  // Default outbound: 20 Dec 2026, return: 4 Jan 2027
+  const outboundDate = '2026-12-20';
+  const returnDate = '2027-01-04';
+  const type = cabinMode === 'biz' ? '2' : '1'; // 1=Economy, 2=Business
+
+  const params = new URLSearchParams({
+    engine: 'google_flights',
+    departure_id: departureId,
+    arrival_id: arrivalId,
+    outbound_date: outboundDate,
+    return_date: returnDate,
+    type: type,
+    currency: 'GBP',
+    hl: 'en',
+    api_key: serpKey,
+  });
+
+  try {
+    const resp = await fetch(`https://serpapi.com/search.json?${params}`);
+    if (!resp.ok) {
+      console.error('SerpAPI error:', resp.status, await resp.text());
+      return null;
+    }
+    const data = await resp.json();
+
+    // Parse best_flights and other_flights
+    const allFlights = [
+      ...(data.best_flights || []),
+      ...(data.other_flights || []),
+    ].slice(0, 6); // Limit to top 6
+
+    const flights = allFlights.map((f: Record<string, unknown>) => {
+      const legs = (f.flights as Record<string, unknown>[]) || [];
+      const firstLeg = legs[0] || {};
+      const airline = (firstLeg.airline as string) || 'Unknown';
+      const departure = (firstLeg.departure_airport as Record<string, string>)?.time || '';
+      const lastLeg = legs[legs.length - 1] || {};
+      const arrival = (lastLeg.arrival_airport as Record<string, string>)?.time || '';
+      return {
+        airline,
+        price: `£${f.price || '?'}`,
+        stops: f.stops === 0 ? 'Direct' : `${f.stops} stop(s)`,
+        duration: `${f.total_duration || '?'} min`,
+        departure,
+        arrival,
+      };
+    });
+
+    return {
+      flights,
+      searchUrl: data.search_metadata?.google_flights_url || '',
+    };
+  } catch (err) {
+    console.error('SerpAPI fetch failed:', err);
+    return null;
+  }
 }
 
 export default async function handler(req: Request): Promise<Response> {
@@ -73,6 +149,7 @@ The user is viewing the **Palawan Route** plan in **${cabinLabel}** mode.
 
 You should:
 1. Answer questions about the plan in detail — activities, hotels, costs, transport, weather, safety, visa, packing, etc.
+2. **You have access to Google Search.** When the user asks about current prices, availability, weather, visa rules, exchange rates, or anything that benefits from up-to-date info, use your search tool to look it up. Prefer real data over guessing.
 3. **When the user asks you to CHANGE, UPDATE, ADD, REMOVE, or MODIFY anything in a plan** — you MUST include a plan-edit JSON block so the app can apply the changes. See format below.
 4. Be concise but informative. Use bullet points for lists.
 5. You know Philippine geography, culture, cuisine, and travel logistics well.
@@ -140,6 +217,29 @@ ${planSummary}
 Keep responses focused and practical. Be warm and enthusiastic about the Philippines!`;
 
   try {
+    // ── Check if user is asking about flights → call SerpAPI ──────────────
+    const lastUserMsg = recentMessages[recentMessages.length - 1]?.content || '';
+    let flightContext = '';
+    if (FLIGHT_KEYWORDS.test(lastUserMsg)) {
+      const flightData = await searchFlights(lastUserMsg, cabinMode as string);
+      if (flightData && flightData.flights.length > 0) {
+        flightContext = `\n\n## REAL FLIGHT DATA (from Google Flights — use these prices, they are accurate)\n`;
+        flightContext += flightData.flights
+          .map(
+            (f, i) =>
+              `${i + 1}. ${f.airline} — ${f.price} (${f.stops}, ${f.duration}) Dep: ${f.departure} Arr: ${f.arrival}`,
+          )
+          .join('\n');
+        if (flightData.searchUrl) {
+          flightContext += `\n\nSource: ${flightData.searchUrl}`;
+        }
+        flightContext += `\n\nIMPORTANT: Use these actual prices in your response and in any plan-edit cabinData. Do NOT make up different prices.`;
+      }
+    }
+
+    // Append flight data to system prompt if available
+    const finalSystemPrompt = systemPrompt + flightContext;
+
     // Convert chat messages to Gemini format
     const geminiContents = recentMessages.map(msg => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
@@ -163,8 +263,9 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            system_instruction: { parts: [{ text: systemPrompt }] },
+            system_instruction: { parts: [{ text: finalSystemPrompt }] },
             contents: geminiContents,
+            tools: [{ google_search: {} }],
             generationConfig: {
               temperature: 0.7,
               maxOutputTokens: 8192,
@@ -175,9 +276,13 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
 
       if (geminiResponse.ok) {
         const data = await geminiResponse.json();
-        const content =
-          data.candidates?.[0]?.content?.parts?.[0]?.text ||
-          'Sorry, I could not generate a response. Please try again.';
+        // Search Grounding may return multiple parts — concatenate all text parts
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        const content = parts
+          .filter((p: Record<string, unknown>) => typeof p.text === 'string')
+          .map((p: Record<string, unknown>) => p.text)
+          .join('')
+          || 'Sorry, I could not generate a response. Please try again.';
         return new Response(JSON.stringify({ content }), { status: 200, headers });
       }
 
