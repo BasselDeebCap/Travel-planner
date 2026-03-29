@@ -33,6 +33,6 @@ jobs:
       - name: Deploy Functions
         uses: w9jds/firebase-action@master
         with:
-          args: deploy --only functions
+          args: deploy --only functions --set-env-vars GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

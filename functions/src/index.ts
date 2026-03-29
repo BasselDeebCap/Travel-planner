@@ -2,10 +2,6 @@
 // Env vars: GEMINI_API_KEY (required), SERPAPI_KEY (optional — enables real flight data)
 
 import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
-
-const geminiKey = defineSecret("GEMINI_API_KEY");
-const serpApiKey = defineSecret("SERPAPI_KEY");
 
 interface ChatRequestBody {
   messages: { role: string; content: string }[];
@@ -87,14 +83,14 @@ async function searchFlights(
 
 // ── Main Cloud Function ───────────────────────────────────────────────────────
 export const chat = onRequest(
-  { secrets: [geminiKey, serpApiKey], cors: true, timeoutSeconds: 60, memory: "256MiB" },
+  { cors: true, timeoutSeconds: 60, memory: "256MiB" },
   async (req, res) => {
     if (req.method !== "POST") {
       res.status(405).json({ error: "Method not allowed" });
       return;
     }
 
-    const apiKey = geminiKey.value();
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       res.json({
         content: "⚠️ The AI service is not configured yet. Please set the GEMINI_API_KEY secret.",
@@ -197,7 +193,7 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
       const lastUserMsg = recentMessages[recentMessages.length - 1]?.content || "";
       let flightContext = "";
       if (FLIGHT_KEYWORDS.test(lastUserMsg)) {
-        const flightData = await searchFlights(serpApiKey.value(), lastUserMsg, cabinMode as string);
+        const flightData = await searchFlights(process.env.SERPAPI_KEY || "", lastUserMsg, cabinMode as string);
         if (flightData && flightData.flights.length > 0) {
           flightContext = `\n\n## REAL FLIGHT DATA (from Google Flights — use these prices, they are accurate)\n`;
           flightContext += flightData.flights
