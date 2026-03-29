@@ -86,7 +86,7 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
           'X-Title': 'Philippines Travel Planner',
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-70b-instruct:free',
+          model: 'google/gemma-3-27b-it:free',
           messages: [
             { role: 'system', content: systemPrompt },
             ...recentMessages,
