@@ -219,7 +219,7 @@ export default function ChatPanel({ expanded, onToggleExpand, planContext, onApp
         {messages.map(msg => (
           <div key={msg.id} className={`chat-msg ${msg.role}`}>
             <div className="chat-msg-wrapper">
-              <div className="chat-bubble">{msg.content}</div>
+              <div className="chat-bubble" dangerouslySetInnerHTML={{ __html: msg.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br/>') }} />
               {msg.planEdit && (
                 <div>
                   <button
