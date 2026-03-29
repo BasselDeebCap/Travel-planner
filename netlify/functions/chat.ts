@@ -142,15 +142,14 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
       parts: [{ text: msg.content }],
     }));
 
-    // Try models in order: 2.5 Pro (best quality) → 2.5 Flash → 2.0 Flash-Lite
-    // Falls back to next model on 429 rate limit
-    const models = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash-lite'];
+    // Fallback chain — only models with free-tier quota (from AI Studio rate limits):
+    // 2.5 Flash (5 RPM / 20 RPD) → 2.5 Flash Lite (10 RPM / 20 RPD) → 3.1 Flash Lite (15 RPM / 500 RPD)
+    const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.1-flash-lite'];
     let lastStatus = 0;
 
     for (let attempt = 0; attempt < models.length; attempt++) {
       if (attempt > 0) {
-        // Wait before retrying (2s, then 4s)
-        await new Promise(r => setTimeout(r, 2000 * attempt));
+        await new Promise(r => setTimeout(r, 1000));
       }
 
       const model = models[attempt];
@@ -182,8 +181,8 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
       const errText = await geminiResponse.text();
       console.error(`Gemini ${model} error (${lastStatus}):`, errText);
 
-      // Only retry on rate-limit; break on other errors
-      if (lastStatus !== 429) break;
+      // Retry on rate-limit (429), model not found (404), or overloaded (503)
+      if (lastStatus !== 429 && lastStatus !== 404 && lastStatus !== 503) break;
     }
 
     const content = lastStatus === 429
