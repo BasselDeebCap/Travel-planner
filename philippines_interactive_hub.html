@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Philippines Travel Planner 2026–27</title>
+<style>
+:root {
+  --navy: #1a3a5c;
+  --blue: #2e6da4;
+  --light-blue: #aac8e8;
+  --gold: #e8a000;
+  --gold-light: #fff8e1;
+  --green: #2e7d32;
+  --green-light: #e8f5e9;
+  --red: #c62828;
+  --bg: #f0f4f8;
+  --white: #ffffff;
+  --border: #c8d8ec;
+  --text: #1a1a1a;
+  --muted: #666;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; min-height: 100vh; }
+
+/* ── TOP NAV ── */
+.top-nav {
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 4px;
+  flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.top-nav .brand { color: #fff; font-size: 15px; font-weight: 700; padding: 12px 12px 12px 4px; white-space: nowrap; border-right: 1px solid #3a5a7c; margin-right: 6px; }
+.top-nav .brand span { color: var(--light-blue); font-size: 11px; display: block; font-weight: 400; }
+.nav-btn {
+  background: transparent; color: var(--light-blue); border: none; padding: 10px 14px;
+  cursor: pointer; font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+  border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
+}
+.nav-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.nav-btn.active { color: #fff; border-bottom-color: var(--gold); }
+.cabin-toggle {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.1);
+  padding: 6px 12px; border-radius: 20px;
+}
+.cabin-toggle label { color: #cde; font-size: 11px; font-weight: 600; }
+.toggle-switch { position: relative; width: 52px; height: 26px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: #3a5a7c; border-radius: 26px; transition: 0.3s;
+}
+.toggle-slider:before {
+  content: ''; position: absolute; height: 20px; width: 20px;
+  left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s;
+}
+input:checked + .toggle-slider { background: var(--gold); }
+input:checked + .toggle-slider:before { transform: translateX(26px); }
+.cabin-label { color: #fff; font-size: 12px; font-weight: 700; min-width: 60px; }
+
+/* ── PAGES ── */
+.page { display: none; padding: 16px; max-width: 1100px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
+  color: #fff; padding: 20px 24px; border-radius: 8px; margin-bottom: 16px;
+}
+.page-header h1 { font-size: 20px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+.page-header p { color: var(--light-blue); font-size: 12px; }
+.phase-tag { display: inline-block; background: rgba(255,255,255,0.15); border-radius: 12px; padding: 2px 10px; font-size: 11px; margin-top: 6px; }
+
+/* ── CABIN INFO BAR ── */
+.cabin-bar {
+  background: var(--gold-light); border: 1px solid var(--gold); border-left: 4px solid var(--gold);
+  padding: 10px 14px; border-radius: 4px; margin-bottom: 14px; font-size: 12px;
+}
+.cabin-bar.econ { background: var(--green-light); border-color: var(--green); border-left-color: var(--green); }
+.cabin-bar strong { color: var(--navy); }
+
+/* ── FLIGHT TABLE ── */
+.section-title { font-size: 13px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; border-bottom: 2px solid var(--navy); padding-bottom: 4px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; }
+th { background: var(--navy); color: #fff; padding: 7px 10px; text-align: left; font-weight: 600; }
+td { padding: 6px 10px; border: 1px solid #d0dce8; vertical-align: top; }
+tr:nth-child(even) td { background: #f2f6fb; }
+.total-row td { background: var(--navy) !important; color: #fff !important; font-weight: 700; }
+.highlight-row td { background: #e3eefa !important; font-weight: 600; }
+
+/* ── FLIGHT OPTION CARDS ── */
+.airline-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.airline-card {
+  border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+.airline-card .ac-head {
+  background: var(--navy); color: #fff; padding: 8px 12px;
+  font-weight: 700; font-size: 12px; display: flex; justify-content: space-between; align-items: center;
+}
+.airline-card .ac-head .badge {
+  background: var(--gold); color: #333; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 700;
+}
+.airline-card .ac-head .badge.eco { background: var(--green); color: #fff; }
+.airline-card .ac-body { padding: 10px 12px; font-size: 12px; }
+.airline-card .ac-body .row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #eee; }
+.airline-card .ac-body .row:last-child { border: none; font-weight: 700; color: var(--navy); font-size: 13px; }
+.airline-card .ac-body .row label { color: var(--muted); }
+
+/* ── PHASE BANNER ── */
+.phase-banner {
+  background: var(--blue); color: #fff; padding: 10px 16px;
+  border-radius: 4px; margin: 18px 0 10px; font-size: 13px; font-weight: 700;
+}
+.phase-banner span { font-size: 11px; font-weight: 400; color: #c8e0f8; display: block; margin-top: 2px; }
+
+/* ── DAY CARDS ── */
+.day-card { border: 1px solid var(--border); border-left: 4px solid var(--navy); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
+.day-card .dc-head {
+  background: var(--navy); color: #fff; padding: 8px 14px;
+  font-size: 12px; font-weight: 700; display: flex; justify-content: space-between; cursor: pointer;
+  user-select: none;
+}
+.day-card .dc-head .dc-num { color: var(--light-blue); font-size: 11px; margin-right: 6px; }
+.day-card .dc-head .dc-arrow { color: var(--light-blue); transition: transform 0.2s; }
+.day-card .dc-head.open .dc-arrow { transform: rotate(180deg); }
+.day-card .dc-body { padding: 12px 14px; display: none; }
+.day-card .dc-body.open { display: block; }
+.day-card .dc-body p { margin-bottom: 7px; line-height: 1.55; }
+.time { font-weight: 700; color: var(--navy); }
+.hotel-note { background: #eef4fb; border-left: 3px solid var(--blue); padding: 6px 10px; font-style: italic; font-size: 11px; margin-top: 8px; border-radius: 2px; }
+.overnight { font-weight: 700; color: var(--navy); margin-top: 8px; font-size: 12px; }
+.tip-box { background: var(--gold-light); border-left: 4px solid var(--gold); padding: 7px 10px; font-size: 11px; margin: 7px 0; border-radius: 2px; }
+
+/* ── MAP ── */
+.map-container { background: #fff; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+.map-header { background: var(--navy); color: #fff; padding: 10px 16px; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.map-header small { color: var(--light-blue); font-weight: 400; font-size: 11px; }
+#map1, #map2 { width: 100%; height: 360px; }
+.map-legend { padding: 8px 14px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; }
+.map-legend .stop { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+.map-legend .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── COMPARISON ── */
+.comp-grid { display: grid; grid-template-columns: 200px 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 16px; }
+.comp-grid .ch { background: var(--navy); color: #fff; padding: 10px 12px; font-weight: 700; font-size: 12px; }
+.comp-grid .ch.p1 { background: #1a4a7a; }
+.comp-grid .ch.p2 { background: #1a5a6a; }
+.comp-grid .cl { padding: 8px 12px; border-bottom: 1px solid #e0eaf4; font-size: 12px; background: #f8fafc; font-weight: 600; color: var(--navy); }
+.comp-grid .cv { padding: 8px 12px; border-bottom: 1px solid #e0eaf4; border-left: 1px solid #e0eaf4; font-size: 12px; }
+.comp-grid .cv.better { background: #e8f5e9; color: var(--green); font-weight: 700; }
+.comp-grid .cv.worse { background: #fff3e0; }
+.comp-grid .total-l { background: var(--navy); color: #fff; padding: 10px 12px; font-weight: 700; font-size: 12px; }
+.comp-grid .total-v { background: var(--navy); color: #fff; padding: 10px 12px; border-left: 1px solid #3a5a7c; font-weight: 700; font-size: 13px; }
+
+.winner-box { background: linear-gradient(135deg, #1a5a3a, #2e8b57); color: #fff; padding: 14px 18px; border-radius: 6px; margin-bottom: 14px; }
+.winner-box h3 { font-size: 14px; margin-bottom: 6px; }
+.winner-box p { font-size: 12px; color: #c8f0d8; line-height: 1.6; }
+
+.comp-feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.comp-feature { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.comp-feature .cf-head { background: var(--blue); color: #fff; padding: 8px 12px; font-size: 12px; font-weight: 700; }
+.comp-feature .cf-body { padding: 10px 12px; font-size: 12px; }
+.comp-feature .cf-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: flex-start; }
+.comp-feature .cf-row .tag { font-size: 10px; background: var(--navy); color: #fff; padding: 1px 6px; border-radius: 10px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.comp-feature .cf-row .tag.p2 { background: #1a6a7a; }
+.comp-feature .cf-row p { font-size: 11px; color: var(--muted); }
+
+/* ── BUDGET CARDS ── */
+.budget-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.budget-card { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 12px; text-align: center; }
+.budget-card .bc-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.budget-card .bc-val { font-size: 17px; font-weight: 700; color: var(--navy); }
+.budget-card .bc-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 650px) {
+  .airline-cards, .comp-feature-grid, .budget-cards { grid-template-columns: 1fr; }
+  .comp-grid { grid-template-columns: 130px 1fr 1fr; }
+  .top-nav { gap: 0; }
+  .nav-btn { padding: 10px 9px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="top-nav">
+  <div class="brand">🇵🇭 Philippines 2026–27 <span>Travel Planner</span></div>
+  <button class="nav-btn active" onclick="showPage('plan1')">Plan 1 · Palawan</button>
+  <button class="nav-btn" onclick="showPage('plan2')">Plan 2 · Heritage</button>
+  <button class="nav-btn" onclick="showPage('compare')">⚖ Compare</button>
+  <div class="cabin-toggle">
+    <label>ECO</label>
+    <label class="toggle-switch">
+      <input type="checkbox" id="cabinToggle" checked onchange="updateCabin()">
+      <span class="toggle-slider"></span>
+    </label>
+    <span class="cabin-label" id="cabinLabel">BIZ</span>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════ PLAN 1 ════════════════════════════════════ -->
+<div id="page-plan1" class="page active">
+
+  <div class="page-header">
+    <h1>🏝 Plan 1 · Cebu · Coron · El Nido · Palawan</h1>
+    <p>18 December 2026 – 3 January 2027 &nbsp;·&nbsp; 16 Days &nbsp;·&nbsp; London Departure</p>
+    <div class="phase-tag">Beaches · Diving · Island Hopping · New Year in El Nido</div>
+  </div>
+
+  <!-- MAP 1 -->
+  <div class="map-container">
+    <div class="map-header">📍 Route Map – Plan 1 <small>Cebu → Coron → El Nido → Manila</small></div>
+    <div id="map1"></div>
+    <div class="map-legend">
+      <div class="stop"><div class="dot" style="background:#1a3a5c"></div> Cebu (Days 2–5)</div>
+      <div class="stop"><div class="dot" style="background:#2e6da4"></div> Coron (Days 6–9)</div>
+      <div class="stop"><div class="dot" style="background:#e8a000"></div> El Nido (Days 10–15)</div>
+      <div class="stop"><div class="dot" style="background:#c62828"></div> Manila (Day 16)</div>
+    </div>
+  </div>
+
+  <!-- CABIN BAR -->
+  <div id="p1-cabin-bar" class="cabin-bar">
+    <strong>✈ Business Class Mode</strong> – Emirates / Qatar Airways. Lie-flat beds, premium lounges, Qsuites. Fares include Middle East conflict fuel surcharges (March 2026 estimate).
+  </div>
+
+  <!-- FLIGHTS -->
+  <div class="section-title">International Flight Options</div>
+  <div class="airline-cards" id="p1-airline-cards">
+    <!-- filled by JS -->
+  </div>
+
+  <div class="section-title">Internal Philippines Flights & Transport</div>
+  <table>
+    <tr><th>Route</th><th>Operator</th><th>Duration</th><th>Est. Cost</th></tr>
+    <tr><td>Cebu → Coron (USU)</td><td>PAL / Cebgo / Sunlight Air</td><td>1h 25min</td><td>£35–60</td></tr>
+    <tr><td>Coron → El Nido (Ferry)</td><td>Atienza / Jomalia Fast Ferry</td><td>3.5–5h</td><td>£40–50</td></tr>
+    <tr><td>Coron → El Nido (Flight)</td><td>AirSWIFT</td><td>40min</td><td>£60–90</td></tr>
+    <tr><td>El Nido → Manila</td><td>AirSWIFT + PAL/Cebu Pacific</td><td>4–6h</td><td>£50–80</td></tr>
+  </table>
+
+  <!-- BUDGET SUMMARY -->
+  <div class="section-title">Total Budget Estimate</div>
+  <div class="budget-cards" id="p1-budget-cards"><!-- filled by JS --></div>
+
+  <!-- DAYS -->
+  <div class="section-title">Day-by-Day Itinerary</div>
+
+  <div class="phase-banner">PHASE 1: CEBU <span>Days 2–5 · Whale Sharks · Canyoneering · Island Hopping</span></div>
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 1</span> Fri 18 Dec – London Departure</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">Evening –</span> Check in at Emirates or Qatar Airways Business/Economy lounge at LHR T3/T4. Overnight departure via Dubai or Doha.</p><p class="overnight">Overnight: In flight</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 2</span> Sat 19 Dec – Arrival in Cebu</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Arrive Mactan-Cebu International Airport, late afternoon. Private transfer to beachfront resort on Mactan Island (30–45 min). Light dinner and rest.</p><p class="hotel-note"><strong>Hotels:</strong> Shangri-La Mactan (£180–320/night) · Crimson Resort (£150–250/night) · Plantation Bay (£120–200/night)</p><p class="overnight">Overnight: Cebu</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 3</span> Sun 20 Dec – Whale Sharks & Waterfalls</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">05:00 –</span> Depart for Oslob (3–3.5h south). Swim with whale sharks in regulated morning sessions.</p><p><span class="time">09:00 –</span> Whale shark interaction in Oslob shallows.</p><p><span class="time">12:00 –</span> Lunch at local seafood restaurant.</p><p><span class="time">13:30 –</span> Tumalog Falls – stunning curtain waterfall, 15 min from Oslob.</p><p><span class="time">Evening –</span> Larsian BBQ night market in Cebu City.</p><p class="overnight">Overnight: Cebu</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 4</span> Mon 21 Dec – Canyoneering at Kawasan Falls</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">07:00 –</span> Depart for Kawasan Falls (3–4h). Half-day canyoneering: cliff jumping, canyon scrambles, turquoise pools.</p><p><span class="time">Evening –</span> Cebu Heritage Trail: Magellan's Cross, Basilica del Santo Niño, Fort San Pedro.</p><p class="overnight">Overnight: Cebu</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 5</span> Tue 22 Dec – Island Hopping</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">08:00 –</span> Full-day island hopping: Hilutungan Marine Sanctuary · Nalusuan Island · Pandanon Island. Fresh seafood lunch on the boat.</p><p><span class="time">Evening –</span> Farewell Cebu dinner: pochero and kinilaw.</p><p class="overnight">Overnight: Cebu</p></div></div>
+
+  <div class="phase-banner">PHASE 2: CORON <span>Days 6–9 · Kayangan Lake · WWII Wrecks · Christmas Eve</span></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 6</span> Wed 23 Dec – Fly to Coron</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">Morning –</span> Flight Cebu → Coron/Busuanga (~1h 25min). Check in.</p><p><span class="time">14:00 –</span> Maquinit Hot Springs – rare saltwater thermal pools (~40°C) surrounded by mangroves.</p><p><span class="time">17:00 –</span> Sunset from Mount Tapyas (724 steps, panoramic 360° view).</p><p class="hotel-note"><strong>Hotels:</strong> Two Seasons Coron (£200–400/night) · Club Paradise Palawan (£180–350/night) · Coron Soleil Garden (£70–120/night)</p><p class="overnight">Overnight: Coron</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 7</span> Thu 24 Dec – Christmas Eve Island Hopping</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">07:30 –</span> Ultimate Coron Tour by bangka: Kayangan Lake · Twin Lagoon · Barracuda Lake · Coral Garden · CYC Beach.</p><p><span class="time">Evening –</span> Special Christmas Eve dinner with live music and Noche Buena feasting.</p><p class="overnight">Overnight: Coron</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 8</span> Fri 25 Dec – Christmas Day · WWII Wreck Diving</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">Morning –</span> Sunrise Mass or relaxation at resort.</p><p><span class="time">Afternoon –</span> Optional: Diving at Coron's 12 sunken Japanese WWII warships – among the best wreck diving in the world.</p><p class="overnight">Overnight: Coron</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 9</span> Sat 26 Dec – Remote Islands</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">07:00 –</span> Full-day excursion: Malcapuya Island · Banana Island · Bulog Dos sandbar. Pristine, very few visitors. Beach picnic lunch.</p><p class="overnight">Overnight: Coron</p></div></div>
+
+  <div class="phase-banner">PHASE 3: EL NIDO & NEW YEAR <span>Days 10–16 · Lagoons · Hidden Beaches · NYE Under Stars</span></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 10</span> Sun 27 Dec – Coron → El Nido</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">07:00 –</span> Fast ferry (3.5–5h, scenic) or AirSWIFT flight (40min) to El Nido. Check in. Sunset at Corong-Corong Beach.</p><p class="hotel-note"><strong>Hotels:</strong> Pangulasian Island Resort (£350–600/night) · Miniloc Island Resort (£250–450/night) · Frangipani El Nido (£80–150/night)</p><p class="overnight">Overnight: El Nido</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 11</span> Mon 28 Dec – Tour A: Big & Small Lagoon</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>El Nido's iconic Tour A by bangka: Big Lagoon (kayak through limestone cliffs) · Small Lagoon (hidden cave entrance) · Secret Lagoon · Shimizu Island snorkelling.</p><p class="overnight">Overnight: El Nido</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 12</span> Tue 29 Dec – Tour C: Hidden Beaches</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Tour C: Matinloc Shrine (dramatic cliff viewpoint) · Secret Beach (swim through cliff gap) · Hidden Beach · Helicopter Island snorkelling.</p><p class="overnight">Overnight: El Nido</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 13</span> Wed 30 Dec – Nacpan Beach</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">08:00 –</span> Drive to Nacpan Beach (45min) – 4km of golden sand, consistently one of the world's best beaches. Afternoon kayaking in Bacuit Bay.</p><p class="overnight">Overnight: El Nido</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 14</span> Thu 31 Dec – New Year's Eve</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">18:00 –</span> NYE celebrations: fireworks, beach parties, fire dancers, midnight countdown on the sand. One of the most spectacular New Year's Eve spots in the world.</p><div class="tip-box">🎆 El Nido is magical at New Year – barefoot, warm air, and the stars above Bacuit Bay.</div><p class="overnight">Overnight: El Nido</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 15</span> Fri 1 Jan – Recovery Day</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>New Year's Day rest. Pool, beach, or optional Tour B (caves, Snake Island sandbar). Final El Nido dinner.</p><p class="overnight">Overnight: El Nido</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 16</span> Sat 2 Jan – El Nido → Manila → London</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Transfer to Lio Airport. Fly El Nido → Manila (AirSWIFT ~1h 15min). Connect to Qatar Airways or Emirates back to London. Arrive London 3 January morning.</p><p class="overnight">Overnight: In flight</p></div></div>
+
+</div><!-- end plan1 -->
+
+<!-- ════════════════════════════════════ PLAN 2 ════════════════════════════════════ -->
+<div id="page-plan2" class="page">
+
+  <div class="page-header" style="background: linear-gradient(135deg, #1a5a4a 0%, #2e8a6a 100%);">
+    <h1>🏔 Plan 2 · Heritage, Highlands & Magic Islands</h1>
+    <p>18 December 2026 – 3 January 2027 &nbsp;·&nbsp; 17 Days &nbsp;·&nbsp; London Departure</p>
+    <div class="phase-tag">Cordillera · Iloilo · Guimaras · Bacolod · Dumaguete · Siquijor</div>
+  </div>
+
+  <!-- MAP 2 -->
+  <div class="map-container">
+    <div class="map-header">📍 Route Map – Plan 2 <small>Manila → Banaue → Sagada → Iloilo → Bacolod → Dumaguete → Siquijor</small></div>
+    <div id="map2"></div>
+    <div class="map-legend">
+      <div class="stop"><div class="dot" style="background:#1a3a5c"></div> Manila (arrival/departure)</div>
+      <div class="stop"><div class="dot" style="background:#4a7a2a"></div> Banaue / Batad</div>
+      <div class="stop"><div class="dot" style="background:#6a4a2a"></div> Sagada</div>
+      <div class="stop"><div class="dot" style="background:#2e6da4"></div> Iloilo / Guimaras</div>
+      <div class="stop"><div class="dot" style="background:#8a2a4a"></div> Bacolod</div>
+      <div class="stop"><div class="dot" style="background:#2a6a7a"></div> Dumaguete / Apo</div>
+      <div class="stop"><div class="dot" style="background:#e8a000"></div> Siquijor (NYE)</div>
+    </div>
+  </div>
+
+  <div id="p2-cabin-bar" class="cabin-bar">
+    <strong>✈ Business Class Mode</strong> – Emirates / Qatar Airways into Manila. Lie-flat beds, premium lounges.
+  </div>
+
+  <div class="section-title">International Flight Options</div>
+  <div class="airline-cards" id="p2-airline-cards"></div>
+
+  <div class="section-title">Internal Philippines Flights & Transport</div>
+  <table>
+    <tr><th>Route</th><th>Mode</th><th>Duration</th><th>Est. Cost</th></tr>
+    <tr><td>Manila → Iloilo (ILO)</td><td>PAL / Cebu Pacific</td><td>1h</td><td>£30–55</td></tr>
+    <tr><td>Dumaguete (DGT) → Manila</td><td>PAL / Cebu Pacific</td><td>1h 15min</td><td>£35–60</td></tr>
+    <tr><td>Manila → Banaue (overnight bus)</td><td>Florida / OhMyBus</td><td>9–10h</td><td>£15–25</td></tr>
+    <tr><td>Banaue → Sagada</td><td>Shared van / jeepney</td><td>3–4h</td><td>£10–20</td></tr>
+    <tr><td>Sagada → Manila</td><td>Bus via Baguio</td><td>10–12h</td><td>£15–25</td></tr>
+    <tr><td>Iloilo → Bacolod</td><td>Weesam Express / OceanJet ferry</td><td>1h 30min</td><td>£6–10</td></tr>
+    <tr><td>Bacolod → Dumaguete</td><td>Ceres Bus / hired car</td><td>5–6h</td><td>£8–25</td></tr>
+    <tr><td>Dumaguete → Siquijor (& return)</td><td>Montenegro / Lite Shipping</td><td>1h</td><td>£3–6 each</td></tr>
+  </table>
+
+  <div class="section-title">Total Budget Estimate</div>
+  <div class="budget-cards" id="p2-budget-cards"></div>
+
+  <div class="section-title">Day-by-Day Itinerary</div>
+
+  <div class="phase-banner" style="background:#2e6e3e;">PHASE 1: THE CORDILLERA MOUNTAINS <span>Days 1–6 · Banaue UNESCO Terraces · Sagada Caves · Indigenous Culture</span></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 1</span> Fri 18 Dec – London → Manila</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">Evening –</span> Depart LHR. Overnight via Dubai (Emirates) or Doha (Qatar). Arrive Manila late Sat.</p><p class="overnight">Overnight: In flight</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 2</span> Sat 19 Dec – Manila → Night Bus to Banaue</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Arrive Manila afternoon. Transfer to Cubao bus terminal. Board premium overnight sleeper bus to Banaue (~9–10h). Saves a hotel night!</p><div class="tip-box">💡 Grab dinner near Cubao terminal. Florida Bus and OhMyBus are the best operators.</div><p class="overnight">Overnight: Sleeper bus</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 3</span> Sun 20 Dec – Banaue & Batad Rice Terraces</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">06:00 –</span> Arrive Banaue. Jeepney to Batad Saddle, then hike down into Batad village. UNESCO World Heritage amphitheatre terraces – 2,000 years old. Tappiya Falls hike (30m cascade). Return to Banaue.</p><p class="hotel-note"><strong>Hotels:</strong> Banaue Hotel (£20–50/night) · People's Lodge (£15–25/night) · Batad Homestay (£10–20/night – recommended!)</p><p class="overnight">Overnight: Banaue / Batad</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 4</span> Mon 21 Dec – Journey to Sagada</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">07:00 –</span> 3–4h mountain drive to Sagada through pine forests and Ifugao villages. Afternoon: Hanging Coffins of Echo Valley (guided walk). Sunset at Kiltepan Peak.</p><p class="hotel-note"><strong>Hotels:</strong> Misty Lodge & Cafe (£25–45/night) · George Guesthouse (£15–25/night)</p><p class="overnight">Overnight: Sagada</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 5</span> Tue 22 Dec – Sumaguing Cave Adventure</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">09:00 –</span> Sumaguing Cave Connection – wade underground rivers, climb limestone cliffs, squeeze through passages. Mandatory guide (register at Tourism Office). You will get completely wet!</p><p><span class="time">Afternoon –</span> Optional: Bomod-Ok Falls hike, or rest with hot tea and a book.</p><p class="overnight">Overnight: Sagada</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 6</span> Wed 23 Dec – Long Road to Manila</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">05:00 –</span> Pre-dawn departure. Bus via Baguio (~10–12h). Lunch stop in Baguio (strawberry market, ube jam). Arrive Manila evening. Hot shower, rest, and a proper meal.</p><p class="hotel-note"><strong>Hotels in Manila:</strong> The Peninsula Makati (£120–250/night) · Seda BGC (£80–140/night) · Raffles Makati (£200–400/night)</p><p class="overnight">Overnight: Manila</p></div></div>
+
+  <div class="phase-banner" style="background:#6a4a1a;">PHASE 2: SUGAR HERITAGE & FOOD TRAIL <span>Days 7–10 · Iloilo · Guimaras · Bacolod · Western Visayas Cuisine</span></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 7</span> Thu 24 Dec – Fly to Iloilo – Christmas Eve</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Morning flight Manila → Iloilo (~1h). La Paz Batchoy lunch (original Deco's or Ted's). Heritage church tour: Miag-ao Church (UNESCO) · Molo Church.</p><p><span class="time">Evening –</span> Noche Buena Christmas Eve dinner: pancit molo, lechon de leche, fresh seafood.</p><p class="hotel-note"><strong>Hotels:</strong> Richmonde Hotel Iloilo (£60–100/night) · Seda Atria (£55–90/night)</p><p class="overnight">Overnight: Iloilo</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 8</span> Fri 25 Dec – Guimaras Island</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">08:00 –</span> 15-min pumpboat to Guimaras. Tricycle tour of the island. World's sweetest Carabao mangoes straight from the tree. Mango pizza (!). Alubihod Beach for swimming.</p><p><span class="time">Evening –</span> Tatoy's Restaurant for chargrilled native chicken.</p><p class="overnight">Overnight: Iloilo</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 9</span> Sat 26 Dec – Fast Ferry to Bacolod</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Ferry Iloilo → Bacolod (1.5h). Lunch: Bacolod Chicken Inasal at Manokan Country – the unmissable original. Afternoon: The Ruins at Talisay (arrive 16:30 for golden hour).</p><p class="hotel-note"><strong>Hotels:</strong> The Henry Hotel (£80–130/night) · L'Fisher Hotel (£50–80/night)</p><p class="overnight">Overnight: Bacolod</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 10</span> Sun 27 Dec – Negros Road Trip → Dumaguete</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Ceres bus / hired car south along Negros coast to Dumaguete (5–6h). Sugar cane, volcanoes, fishing villages. Evening: Rizal Boulevard promenade, barbecue stalls.</p><p class="hotel-note"><strong>Hotels:</strong> The Thinker's Lodge (£35–60/night) · South Sea Resort (£50–85/night)</p><p class="overnight">Overnight: Dumaguete</p></div></div>
+
+  <div class="phase-banner" style="background:#1a5a6a;">PHASE 3: SIQUIJOR – MYSTIC ISLAND & NYE <span>Days 11–17 · Sea Turtles · Rope Swings · Healers · New Year Barefoot</span></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 11</span> Mon 28 Dec – Apo Island → Siquijor</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p><span class="time">07:00 –</span> Boat to Apo Island (40min). Snorkel with wild green sea turtles – one of the best encounters in Southeast Asia. Return to Dumaguete, then ferry to Siquijor (1h).</p><p class="hotel-note"><strong>Resorts:</strong> Coco Grove Beach Resort (£80–150/night) · Charisma Beach Resort (£50–90/night) · Islander's Paradise (£30–55/night)</p><p class="overnight">Overnight: Siquijor</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 12</span> Tue 29 Dec – Island Scooter Loop</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Rent scooters (£8–12/day). Circumferential road loop: Balete Tree & fish spa · Cambugahay Falls (rope swing into turquoise water!) · Lazi Convent (oldest in Asia) · Paliton Beach at sunset.</p><p class="overnight">Overnight: Siquijor</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 13</span> Wed 30 Dec – Beach Day & Folk Healers</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Salagdoong Beach (cliff jumping). Optional: visit a mananambal folk healer in the mountains – a unique experience found nowhere else in the Philippines. Lugnason Falls. Hilot massage at sunset.</p><p class="overnight">Overnight: Siquijor</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 14</span> Thu 31 Dec – New Year's Eve</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Relaxed morning. Afternoon hilot massage. Evening: San Juan beach bars come alive – bonfires, fire dancers, live music, midnight fireworks over the sea. Intimate, warm, magical.</p><div class="tip-box">🎆 Siquijor's NYE is intimate and magical vs mainstream. Barefoot, stars, warm ocean.</div><p class="overnight">Overnight: Siquijor</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 15</span> Fri 1 Jan – Recovery Day</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>New Year's Day. Fresh coconuts, pool, ocean. Gentle boat trip if energy permits. Final dinner in Siquijor: whole grilled fish and cold San Miguel.</p><p class="overnight">Overnight: Siquijor</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 16</span> Sat 2 Jan – Siquijor → Dumaguete → Manila</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Morning ferry back to Dumaguete. Flight Dumaguete → Manila (1h 15min). Afternoon rest at airport hotel before night departure to London.</p><p class="overnight">Overnight: In flight</p></div></div>
+
+  <div class="day-card"><div class="dc-head" onclick="toggleDay(this)"><span><span class="dc-num">DAY 17</span> Sun 3 Jan – Arrive London</span><span class="dc-arrow">▼</span></div>
+  <div class="dc-body"><p>Arrive LHR morning/early afternoon via Dubai or Doha. Journey complete.</p></div></div>
+
+</div><!-- end plan2 -->
+
+<!-- ════════════════════════════════════ COMPARE ════════════════════════════════════ -->
+<div id="page-compare" class="page">
+
+  <div class="page-header" style="background: linear-gradient(135deg, #3a1a5c 0%, #6a2e9a 100%);">
+    <h1>⚖ Plan Comparison</h1>
+    <p>Plan 1 (Palawan) vs Plan 2 (Heritage & Highlands) &nbsp;·&nbsp; Toggle cabin class above</p>
+  </div>
+
+  <div id="comp-winner" class="winner-box"><!-- filled by JS --></div>
+
+  <!-- COST COMPARISON TABLE -->
+  <div class="section-title">Cost Comparison – <span id="comp-cabin-label">Business Class</span></div>
+  <div class="comp-grid" id="comp-table"><!-- filled by JS --></div>
+
+  <!-- FEATURE COMPARISON -->
+  <div class="section-title">Head-to-Head: What Each Plan Offers</div>
+  <div class="comp-feature-grid">
+    <div class="comp-feature">
+      <div class="cf-head">🏖 Beach & Ocean Quality</div>
+      <div class="cf-body">
+        <div class="cf-row"><div class="tag">Plan 1</div><div><p>World-class beaches: Nacpan, Malcapuya, CYC Beach. El Nido lagoons are arguably the best in the Philippines.</p></div></div>
+        <div class="cf-row"><div class="tag p2">Plan 2</div><div><p>Quieter, less-visited beaches: Alubihod (Guimaras), Salagdoong (Siquijor), Paliton Beach. Less photogenic, more authentic.</p></div></div>
+      </div>
+    </div>
+    <div class="comp-feature">
+      <div class="cf-head">🍽 Food Experience</div>
+      <div class="cf-body">
+        <div class="cf-row"><div class="tag">Plan 1</div><div><p>Good seafood in Cebu and El Nido. Larsian BBQ, kinilaw. Beach grills.</p></div></div>
+        <div class="cf-row"><div class="tag p2">Plan 2</div><div><p>Outstanding. La Paz Batchoy, Bacolod Chicken Inasal, Guimaras mangoes. The Visayas is the culinary capital of the Philippines.</p></div></div>
+      </div>
+    </div>
+    <div class="comp-feature">
+      <div class="cf-head">🏛 Culture & Heritage</div>
+      <div class="cf-body">
+        <div class="cf-row"><div class="tag">Plan 1</div><div><p>Heritage Trail in Cebu City. Mostly a nature/activity-based trip.</p></div></div>
+        <div class="cf-row"><div class="tag p2">Plan 2</div><div><p>Rich: 2,000-year-old rice terraces, UNESCO churches, folk healers, ancestral houses, Spanish colonial towns throughout.</p></div></div>
+      </div>
+    </div>
+    <div class="comp-feature">
+      <div class="cf-head">🧗 Adventure Level</div>
+      <div class="cf-body">
+        <div class="cf-row"><div class="tag">Plan 1</div><div><p>Canyoneering at Kawasan, WWII wreck diving, snorkelling. Moderate-high.</p></div></div>
+        <div class="cf-row"><div class="tag p2">Plan 2</div><div><p>Higher: Batad terrace hike, Sumaguing Cave (demanding), cliff jumping in Siquijor, plus long mountain transit days.</p></div></div>
+      </div>
+    </div>
+    <div class="comp-feature">
+      <div class="cf-head">😌 Relaxation Factor</div>
+      <div class="cf-body">
+        <div class="cf-row"><div class="tag">Plan 1</div><div><p>High – resort-based stays, beach days built in. El Nido is laid-back.</p></div></div>
+        <div class="cf-row"><div class="tag p2">Plan 2</div><div><p>Mixed – Cordillera phase is tough. Siquijor (Days 11–17) is deeply restful. Best rest of the two trips in final phase.</p></div></div>
+      </div>
+    </div>
+    <div class="comp-feature">
+      <div class="cf-head">🚌 Travel Fatigue</div>
+      <div class="cf-body">
+        <div class="cf-row"><div class="tag">Plan 1</div><div><p>Moderate. Flights between islands. El Nido connection can be long.</p></div></div>
+        <div class="cf-row"><div class="tag p2">Plan 2</div><div><p>Higher. 10–12h bus days, overnight sleeper, multiple ferries. Rewarding but tiring.</p></div></div>
+      </div>
+    </div>
+    <div class="comp-feature">
+      <div class="cf-head">🎆 New Year's Eve</div>
+      <div class="cf-body">
+        <div class="cf-row"><div class="tag">Plan 1</div><div><p>El Nido: beach party, fireworks over Bacuit Bay. Festive and lively.</p></div></div>
+        <div class="cf-row"><div class="tag p2">Plan 2</div><div><p>Siquijor: intimate, barefoot, bonfires, fire dancers. More magical, less crowded.</p></div></div>
+      </div>
+    </div>
+    <div class="comp-feature">
+      <div class="cf-head">📸 Instagram Factor</div>
+      <div class="cf-body">
+        <div class="cf-row"><div class="tag">Plan 1</div><div><p>Very high. El Nido lagoons are globally recognised. High visual impact throughout.</p></div></div>
+        <div class="cf-row"><div class="tag p2">Plan 2</div><div><p>High but different. Batad terraces are breathtaking. Hanging Coffins, The Ruins, Cambugahay Falls are striking but less mainstream.</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="section-title">Which Plan Is Right for You?</div>
+  <table>
+    <tr><th>You should choose Plan 1 (Palawan) if…</th><th>You should choose Plan 2 (Heritage) if…</th></tr>
+    <tr><td>You want world-famous beaches and lagoons</td><td>You want to go beyond the tourist trail</td></tr>
+    <tr><td>You prefer resort-based, higher-comfort travel</td><td>You're excited by food, culture and history</td></tr>
+    <tr><td>Diving and snorkelling are priorities</td><td>You're physically fit and love challenging hikes</td></tr>
+    <tr><td>You've never been to the Philippines before</td><td>You've done Palawan and want something different</td></tr>
+    <tr><td>Higher budget is not a concern</td><td>You want better local value for money</td></tr>
+    <tr><td>You want the most "classic" Philippines experience</td><td>You want the most unique Philippines experience</td></tr>
+  </table>
+
+</div><!-- end compare -->
+
+<!-- ═══════════════════════ MAPS (Leaflet) ═══════════════════════ -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const CABIN = {
+  biz: {
+    label: 'Business Class',
+    p1: {
+      airline_cards: [
+        { name:'Qatar Airways', badge:'Qsuite', badgeClass:'', route:'LHR→DOH→CEB', via:'Doha', duration:'~16–18h', aircraft:'A350/B777', fare:'£4,800–£6,200' },
+        { name:'Emirates', badge:'Business', badgeClass:'', route:'LHR→DXB→CEB', via:'Dubai', duration:'~17–20h', aircraft:'A380/B777', fare:'£4,500–£6,000' },
+      ],
+      budget: [
+        { label:'Intl Flights (return)', val:'£4,500–£6,500' },
+        { label:'Domestic Flights & Ferry', val:'£125–£230' },
+        { label:'Accommodation (15 nts)', val:'£2,000–£4,500' },
+        { label:'Tours & Activities', val:'£400–£800' },
+        { label:'Food & Dining', val:'£450–£750' },
+        { label:'Transfers & Misc', val:'£200–£400' },
+        { label:'TOTAL (per person)', val:'£7,675–£13,180', total:true },
+      ]
+    },
+    p2: {
+      airline_cards: [
+        { name:'Qatar Airways', badge:'Qsuite', badgeClass:'', route:'LHR→DOH→MNL', via:'Doha', duration:'~16–18h', aircraft:'A350/B777', fare:'£4,600–£6,000' },
+        { name:'Emirates', badge:'Business', badgeClass:'', route:'LHR→DXB→MNL', via:'Dubai', duration:'~17–20h', aircraft:'A380/B777', fare:'£4,300–£5,800' },
+      ],
+      budget: [
+        { label:'Intl Flights (return)', val:'£4,300–£6,200' },
+        { label:'Domestic Flights', val:'£65–£115' },
+        { label:'Ferries & Ground Transport', val:'£110–£160' },
+        { label:'Accommodation (15 nts)', val:'£550–£1,100' },
+        { label:'Tours & Activities', val:'£90–£165' },
+        { label:'Food & Dining', val:'£320–£530' },
+        { label:'Transfers & Misc', val:'£150–£300' },
+        { label:'TOTAL (per person)', val:'£5,585–£8,570', total:true },
+      ]
+    },
+    comp: {
+      rows: [
+        { label:'Intl Flights (return)', p1:'£4,500–£6,500', p2:'£4,300–£6,200', winner:'p2' },
+        { label:'Domestic Transport', p1:'£125–£230', p2:'£175–£275', winner:'p1' },
+        { label:'Accommodation', p1:'£2,000–£4,500', p2:'£550–£1,100', winner:'p2' },
+        { label:'Tours & Activities', p1:'£400–£800', p2:'£90–£165', winner:'p2' },
+        { label:'Food & Dining', p1:'£450–£750', p2:'£320–£530', winner:'p2' },
+        { label:'Transfers & Misc', p1:'£200–£400', p2:'£150–£300', winner:'p2' },
+        { label:'TOTAL (per person)', p1:'£7,675–£13,180', p2:'£5,585–£8,570', winner:'p2', total:true },
+      ],
+      winner: 'Plan 2 (Heritage)',
+      saving: '~£2,000–£4,600',
+      winnerNote: 'Plan 2 is significantly cheaper in Business Class, primarily because it avoids the expensive Palawan luxury resort belt (El Nido/Coron prices are among the highest in the Philippines). Mountain homestays, guesthouses in Iloilo/Bacolod, and Siquijor boutique resorts offer far better value.'
+    }
+  },
+  eco: {
+    label: 'Economy Class',
+    p1: {
+      airline_cards: [
+        { name:'Emirates', badge:'Economy', badgeClass:'eco', route:'LHR→DXB→CEB', via:'Dubai', duration:'~17–20h', aircraft:'A380/B777', fare:'£1,100–£1,600' },
+        { name:'Qatar Airways', badge:'Economy', badgeClass:'eco', route:'LHR→DOH→CEB', via:'Doha', duration:'~16–18h', aircraft:'A350/B777', fare:'£1,150–£1,700' },
+        { name:'Philippine Airlines', badge:'Economy', badgeClass:'eco', route:'LHR→MNL→CEB', via:'Manila', duration:'~18–22h', aircraft:'A350/B777', fare:'£950–£1,400' },
+        { name:'Singapore Airlines', badge:'Economy', badgeClass:'eco', route:'LHR→SIN→MNL→CEB', via:'Singapore', duration:'~20–24h', aircraft:'A380/B777', fare:'£900–£1,300' },
+      ],
+      budget: [
+        { label:'Intl Flights (return)', val:'£900–£1,700' },
+        { label:'Domestic Flights & Ferry', val:'£125–£230' },
+        { label:'Accommodation (15 nts)', val:'£2,000–£4,500' },
+        { label:'Tours & Activities', val:'£400–£800' },
+        { label:'Food & Dining', val:'£450–£750' },
+        { label:'Transfers & Misc', val:'£200–£400' },
+        { label:'TOTAL (per person)', val:'£4,075–£8,380', total:true },
+      ]
+    },
+    p2: {
+      airline_cards: [
+        { name:'Emirates', badge:'Economy', badgeClass:'eco', route:'LHR→DXB→MNL', via:'Dubai', duration:'~17–20h', aircraft:'A380/B777', fare:'£1,050–£1,550' },
+        { name:'Qatar Airways', badge:'Economy', badgeClass:'eco', route:'LHR→DOH→MNL', via:'Doha', duration:'~16–18h', aircraft:'A350/B777', fare:'£1,100–£1,600' },
+        { name:'Philippine Airlines', badge:'Economy', badgeClass:'eco', route:'LHR→MNL (direct)', via:'Manila direct', duration:'~14–16h', aircraft:'A350', fare:'£900–£1,350' },
+        { name:'Cathay Pacific', badge:'Economy', badgeClass:'eco', route:'LHR→HKG→MNL', via:'Hong Kong', duration:'~16–19h', aircraft:'A350/B777', fare:'£850–£1,250' },
+      ],
+      budget: [
+        { label:'Intl Flights (return)', val:'£850–£1,600' },
+        { label:'Domestic Flights', val:'£65–£115' },
+        { label:'Ferries & Ground Transport', val:'£110–£160' },
+        { label:'Accommodation (15 nts)', val:'£550–£1,100' },
+        { label:'Tours & Activities', val:'£90–£165' },
+        { label:'Food & Dining', val:'£320–£530' },
+        { label:'Transfers & Misc', val:'£150–£300' },
+        { label:'TOTAL (per person)', val:'£2,135–£3,970', total:true },
+      ]
+    },
+    comp: {
+      rows: [
+        { label:'Intl Flights (return)', p1:'£900–£1,700', p2:'£850–£1,600', winner:'p2' },
+        { label:'Domestic Transport', p1:'£125–£230', p2:'£175–£275', winner:'p1' },
+        { label:'Accommodation', p1:'£2,000–£4,500', p2:'£550–£1,100', winner:'p2' },
+        { label:'Tours & Activities', p1:'£400–£800', p2:'£90–£165', winner:'p2' },
+        { label:'Food & Dining', p1:'£450–£750', p2:'£320–£530', winner:'p2' },
+        { label:'Transfers & Misc', p1:'£200–£400', p2:'£150–£300', winner:'p2' },
+        { label:'TOTAL (per person)', p1:'£4,075–£8,380', p2:'£2,135–£3,970', winner:'p2', total:true },
+      ],
+      winner: 'Plan 2 (Heritage)',
+      saving: '~£1,940–£4,410',
+      winnerNote: 'In Economy Class, Plan 2 is dramatically cheaper. The Palawan/Cebu route commands premium accommodation pricing. Plan 2\'s provincial guesthouses, mountain homestays, and local transport costs are a fraction of Plan 1\'s resort costs – making it the standout budget-conscious choice without sacrificing experience quality.'
+    }
+  }
+};
+
+// ── STATE ──────────────────────────────────────────────────────────────
+let currentCabin = 'biz';
+let mapsInit = { map1: false, map2: false };
+let leafletMaps = {};
+
+// ── RENDER ─────────────────────────────────────────────────────────────
+function renderAirlineCards(containerId, cards) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = cards.map(c => `
+    <div class="airline-card">
+      <div class="ac-head">${c.name} <span class="badge ${c.badgeClass}">${c.badge}</span></div>
+      <div class="ac-body">
+        <div class="row"><label>Route</label><span>${c.route}</span></div>
+        <div class="row"><label>Via</label><span>${c.via}</span></div>
+        <div class="row"><label>Duration</label><span>${c.duration}</span></div>
+        <div class="row"><label>Aircraft</label><span>${c.aircraft}</span></div>
+        <div class="row"><label>Est. Return Fare</label><span>${c.fare}</span></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderBudgetCards(containerId, items) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.filter(i=>!i.total).slice(0,6).map(i => `
+    <div class="budget-card">
+      <div class="bc-label">${i.label}</div>
+      <div class="bc-val">${i.val}</div>
+    </div>`).join('');
+  const tot = items.find(i=>i.total);
+  if(tot) el.innerHTML += `<div class="budget-card" style="background:var(--navy);color:#fff;grid-column:1/-1;">
+    <div class="bc-label" style="color:var(--light-blue)">TOTAL ESTIMATED (per person)</div>
+    <div class="bc-val" style="color:#fff">${tot.val}</div>
+    <div class="bc-sub" style="color:#aac8e8">${currentCabin==='biz'?'Business Class':'Economy Class'}</div>
+  </div>`;
+}
+
+function renderCompTable(data) {
+  document.getElementById('comp-cabin-label').textContent = CABIN[currentCabin].label;
+  const el = document.getElementById('comp-table');
+  el.innerHTML = `
+    <div class="ch">Cost Category</div>
+    <div class="ch p1">🏝 Plan 1 · Palawan</div>
+    <div class="ch p2">🏔 Plan 2 · Heritage</div>
+    ${data.rows.map(r => `
+      <div class="${r.total?'total-l':'cl'}">${r.label}</div>
+      <div class="${r.total?'total-v':'cv'}${r.winner==='p1'&&!r.total?' better':r.winner==='p2'&&!r.total?' worse':''}">${r.p1}</div>
+      <div class="${r.total?'total-v':'cv'}${r.winner==='p2'&&!r.total?' better':r.winner==='p1'&&!r.total?' worse':''}">${r.p2}</div>
+    `).join('')}`;
+
+  document.getElementById('comp-winner').innerHTML = `
+    <h3>💰 Better Value: ${data.winner} (saves ${data.saving} per person in ${CABIN[currentCabin].label})</h3>
+    <p>${data.winnerNote}</p>`;
+}
+
+function updateCabin() {
+  const toggle = document.getElementById('cabinToggle');
+  currentCabin = toggle.checked ? 'biz' : 'eco';
+  document.getElementById('cabinLabel').textContent = toggle.checked ? 'BIZ' : 'ECO';
+
+  const d = CABIN[currentCabin];
+  // cabin bars
+  const bizMsg = `<strong>✈ Business Class Mode</strong> – Emirates / Qatar Airways. Lie-flat beds, premium lounges, Qsuites. Fares include Middle East conflict fuel surcharges (March 2026 estimate).`;
+  const ecoMsg = `<strong>🌿 Economy Class Mode</strong> – Emirates, Qatar Airways, Philippine Airlines & Cathay Pacific. Competitive pricing. Note: December peak season adds 20–30% to base fares. Booking 3–4 months in advance recommended.`;
+
+  ['p1','p2'].forEach(p => {
+    const bar = document.getElementById(`${p}-cabin-bar`);
+    bar.className = 'cabin-bar' + (currentCabin==='eco' ? ' econ' : '');
+    bar.innerHTML = currentCabin==='biz' ? bizMsg : ecoMsg;
+  });
+
+  renderAirlineCards('p1-airline-cards', d.p1.airline_cards);
+  renderAirlineCards('p2-airline-cards', d.p2.airline_cards);
+  renderBudgetCards('p1-budget-cards', d.p1.budget);
+  renderBudgetCards('p2-budget-cards', d.p2.budget);
+  renderCompTable(d.comp);
+}
+
+// ── PAGES ──────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  // init maps
+  if(id==='plan1' && !mapsInit.map1) { setTimeout(()=>initMap1(), 200); mapsInit.map1=true; }
+  if(id==='plan2' && !mapsInit.map2) { setTimeout(()=>initMap2(), 200); mapsInit.map2=true; }
+}
+
+// ── DAYS TOGGLE ────────────────────────────────────────────────────────
+function toggleDay(head) {
+  head.classList.toggle('open');
+  head.nextElementSibling.classList.toggle('open');
+}
+
+// ── MAPS ───────────────────────────────────────────────────────────────
+const STOPS1 = [
+  { name:'Cebu City', lat:10.3157, lng:123.8854, color:'#1a3a5c', days:'Days 2–5', desc:'Whale sharks, canyoneering, island hopping' },
+  { name:'Coron, Palawan', lat:11.9986, lng:120.2035, color:'#2e6da4', days:'Days 6–9', desc:'Kayangan Lake, WWII wrecks, Christmas Eve' },
+  { name:'El Nido, Palawan', lat:11.1790, lng:119.4066, color:'#e8a000', days:'Days 10–15', desc:'Lagoons, hidden beaches, New Year\'s Eve' },
+  { name:'Manila', lat:14.5995, lng:120.9842, color:'#c62828', days:'Day 16', desc:'Departure hub' },
+];
+
+const STOPS2 = [
+  { name:'Manila', lat:14.5995, lng:120.9842, color:'#1a3a5c', days:'Days 1–2 & 16–17', desc:'Arrival, night bus departure, final departure' },
+  { name:'Banaue', lat:16.9130, lng:121.0578, color:'#4a7a2a', days:'Day 3', desc:'UNESCO rice terraces, Batad, Tappiya Falls' },
+  { name:'Sagada', lat:17.0851, lng:120.9013, color:'#6a4a2a', days:'Days 4–5', desc:'Hanging coffins, Sumaguing Cave' },
+  { name:'Iloilo City', lat:10.7202, lng:122.5621, color:'#2e6da4', days:'Days 7–8', desc:'La Paz Batchoy, Miag-ao Church, Guimaras mangoes' },
+  { name:'Bacolod City', lat:10.6765, lng:122.9509, color:'#8a2a4a', days:'Day 9', desc:'Chicken Inasal, The Ruins' },
+  { name:'Dumaguete City', lat:9.3068, lng:123.3054, color:'#2a6a7a', days:'Day 10', desc:'Rizal Boulevard, Apo Island sea turtles' },
+  { name:'Siquijor Island', lat:9.2000, lng:123.5500, color:'#e8a000', days:'Days 11–16', desc:'Scooter loop, Cambugahay Falls, NYE' },
+];
+
+function makeIcon(color, label) {
+  return L.divIcon({
+    html: `<div style="background:${color};color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:12px;white-space:nowrap;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4)">${label}</div>`,
+    className: '', iconAnchor: [0, 10]
+  });
+}
+
+function initMap1() {
+  const map = L.map('map1', { zoomControl: true, scrollWheelZoom: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:13 }).addTo(map);
+  const bounds = [];
+  const pts = STOPS1.map(s => [s.lat, s.lng]);
+  STOPS1.forEach((s,i) => {
+    L.marker([s.lat,s.lng], {icon: makeIcon(s.color, `${i+1}. ${s.name}`)})
+      .addTo(map)
+      .bindPopup(`<strong>${s.name}</strong><br><em>${s.days}</em><br>${s.desc}`);
+    bounds.push([s.lat, s.lng]);
+  });
+  L.polyline(pts, {color:'#2e6da4', weight:2, dashArray:'6,6', opacity:0.6}).addTo(map);
+  map.fitBounds(bounds, {padding:[30,30]});
+  leafletMaps.map1 = map;
+}
+
+function initMap2() {
+  const map = L.map('map2', { zoomControl: true, scrollWheelZoom: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:13 }).addTo(map);
+  const pts = STOPS2.map(s => [s.lat, s.lng]);
+  STOPS2.forEach((s,i) => {
+    L.marker([s.lat,s.lng], {icon: makeIcon(s.color, `${i+1}. ${s.name}`)})
+      .addTo(map)
+      .bindPopup(`<strong>${s.name}</strong><br><em>${s.days}</em><br>${s.desc}`);
+  });
+  L.polyline(pts, {color:'#2e7d32', weight:2, dashArray:'6,6', opacity:0.6}).addTo(map);
+  map.fitBounds(pts, {padding:[30,30]});
+  leafletMaps.map2 = map;
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────
+updateCabin();
+setTimeout(() => initMap1(), 400);
+</script>
+</body>
+</html>
