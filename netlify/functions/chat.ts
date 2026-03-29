@@ -131,8 +131,9 @@ Keep responses focused and practical. Be warm and enthusiastic about the Philipp
       parts: [{ text: msg.content }],
     }));
 
-    // Retry logic for rate limits (429)
-    const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash'];
+    // Try models in order: 2.5 Pro (best quality) → 2.5 Flash → 2.0 Flash-Lite
+    // Falls back to next model on 429 rate limit
+    const models = ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash-lite'];
     let lastStatus = 0;
 
     for (let attempt = 0; attempt < models.length; attempt++) {
