@@ -91,7 +91,7 @@ When the user asks for a change to a plan, respond with:
 The JSON object must follow this exact schema:
 {
   "targetPlan": "plan1",
-  "cabinTarget": "${cabinMode}",
+  "cabinTarget": "${cabinMode}" or "both",
   "description": "Brief summary of changes (shown to user as a label)",
   "planInfo": {
     // Include ONLY fields you are changing. Omit fields you're not changing.
@@ -106,16 +106,22 @@ The JSON object must follow this exact schema:
     "internalRoutes": [ { "route": "A → B", "operator": "...", "duration": "...", "cost": "£XX" } ],
     "phases": [ { "title": "PHASE N: ...", "subtitle": "...", "bgColor": "#hex or omit", "days": [ { "dayNum": N, "date": "Day DD Mon", "title": "...", "content": "<p>HTML content for the day</p>" } ] } ]
   },
+  // --- Option A: Single cabin (cabinTarget = "biz" or "eco") ---
   "cabinData": {
-    // Include ONLY if changing flights or budget
     "airline_cards": [ { "name": "...", "badge": "...", "badgeClass": "", "route": "...", "via": "...", "duration": "...", "aircraft": "...", "fare": "£X–£Y" } ],
     "budget": [ { "label": "...", "val": "£X–£Y" }, ..., { "label": "TOTAL (per person)", "val": "£X–£Y", "total": true } ]
+  }
+  // --- Option B: Both cabins (cabinTarget = "both") ---
+  "cabinData": {
+    "biz": { "airline_cards": [...], "budget": [...] },
+    "eco": { "airline_cards": [...], "budget": [...] }
   }
 }
 
 CRITICAL RULES:
 - **Your chat text MUST be plain, conversational English.** No code, no field names, no JSON, no HTML, no bullet lists of technical changes. Just 1-3 friendly sentences summarising what you did. The chat text is shown to a non-technical user in a small bubble — keep it short and warm.
-- Set "targetPlan" to "plan1" always. Set "cabinTarget" to "${cabinMode}" always — only modify the cabin class the user is currently viewing.
+- Set "targetPlan" to "plan1" always. By default, set "cabinTarget" to "${cabinMode}" (the current view).
+- **If the user explicitly asks to update BOTH cabin classes**, set "cabinTarget" to "both" and nest cabinData by cabin key: { "biz": { "airline_cards": [...], "budget": [...] }, "eco": { "airline_cards": [...], "budget": [...] } }. Each cabin MUST have its own appropriate flights and fares — Business class options for biz, Economy class options for eco. NEVER copy the same flight data into both.
 - If you are only modifying the itinerary (days/phases), only include "planInfo" with "phases". Do NOT include unchanged fields.
 - If you are only modifying flights/budget, only include "cabinData". Do NOT include unchanged fields.
 - When modifying phases, you MUST include ALL phases and ALL days within each phase (the entire phases array replaces the current one).
@@ -126,7 +132,8 @@ CRITICAL RULES:
 - "description" field is required — keep it short, e.g. "Added Boracay day trip on Day 5"
 - The day content field uses HTML: use <p>, <strong>, <em> tags. Use class="time" for time markers, class="hotel-note" for hotel info, class="tip-box" for tips.
 - Do NOT wrap the JSON in markdown code fences inside the :::plan-edit block. The JSON goes directly after the :::plan-edit line.
-- **cabinData MUST be flat** — put airline_cards and budget arrays directly inside cabinData. Do NOT nest by cabin key. WRONG: { "cabinData": { "biz": { "airline_cards": [...] } } }. CORRECT: { "cabinData": { "airline_cards": [...], "budget": [...] } }. The "cabinTarget" field already specifies which cabin class is affected.
+- When cabinTarget is "biz" or "eco", cabinData MUST be flat: { "airline_cards": [...], "budget": [...] }.
+- When cabinTarget is "both", cabinData MUST be nested: { "biz": { "airline_cards": [...], "budget": [...] }, "eco": { "airline_cards": [...], "budget": [...] } }. Each cabin gets its own distinct flights and budget appropriate to that class.
 - For questions that don't require changes (e.g. "what's the weather like?"), just respond normally WITHOUT the :::plan-edit block.
 ${planSummary}
 

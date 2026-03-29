@@ -72,21 +72,42 @@ export default function App() {
       }));
     }
 
-    // Merge cabin data — only apply to the specified cabin target (never "both")
+    // Merge cabin data — detect flat vs nested format
     if (cabinPatch) {
       setCabinData(prev => {
         const updated = { ...prev };
         const planKey = targetPlan === 'plan1' ? 'p1' : 'p2';
-        const mode = cabinTarget === 'biz' || cabinTarget === 'eco' ? cabinTarget : cabinMode;
+        const isNested = 'biz' in cabinPatch || 'eco' in cabinPatch;
 
-        const current = prev[mode][planKey];
-        updated[mode] = {
-          ...prev[mode],
-          [planKey]: {
-            airline_cards: cabinPatch.airline_cards ?? current.airline_cards,
-            budget: cabinPatch.budget ?? current.budget,
-          },
-        };
+        if (isNested) {
+          // Nested: { biz: { airline_cards, budget }, eco: { ... } }
+          const nested = cabinPatch as { biz?: { airline_cards?: typeof prev.biz.p1.airline_cards; budget?: typeof prev.biz.p1.budget }; eco?: typeof prev.biz.p1 };
+          for (const m of ['biz', 'eco'] as const) {
+            const patch = nested[m];
+            if (patch) {
+              const current = prev[m][planKey];
+              updated[m] = {
+                ...prev[m],
+                [planKey]: {
+                  airline_cards: patch.airline_cards ?? current.airline_cards,
+                  budget: patch.budget ?? current.budget,
+                },
+              };
+            }
+          }
+        } else {
+          // Flat: { airline_cards, budget } — apply to specified cabin only
+          const flat = cabinPatch as { airline_cards?: typeof prev.biz.p1.airline_cards; budget?: typeof prev.biz.p1.budget };
+          const mode = cabinTarget === 'biz' || cabinTarget === 'eco' ? cabinTarget : cabinMode;
+          const current = prev[mode][planKey];
+          updated[mode] = {
+            ...prev[mode],
+            [planKey]: {
+              airline_cards: flat.airline_cards ?? current.airline_cards,
+              budget: flat.budget ?? current.budget,
+            },
+          };
+        }
         return updated;
       });
     }

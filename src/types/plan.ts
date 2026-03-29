@@ -118,6 +118,11 @@ export interface ChatMessage {
 
 // ── Plan Edit types (AI-driven plan modifications) ──
 
+export interface CabinPatch {
+  airline_cards?: AirlineCard[];
+  budget?: BudgetItem[];
+}
+
 export interface PlanEditPayload {
   targetPlan: 'plan1' | 'plan2';
   cabinTarget?: 'biz' | 'eco' | 'both';
@@ -126,9 +131,9 @@ export interface PlanEditPayload {
     internalRoutes?: InternalRoute[];
     phases?: PhaseData[];
   };
-  cabinData?: {
-    airline_cards?: AirlineCard[];
-    budget?: BudgetItem[];
+  cabinData?: CabinPatch | {
+    biz?: CabinPatch;
+    eco?: CabinPatch;
   };
   description: string; // Human-readable summary of what changed
 }
