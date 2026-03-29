@@ -230,10 +230,15 @@ export default function ChatPanel({ expanded, onToggleExpand, planContext, onApp
       <div className="chat-input-area">
         <textarea
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={e => {
+            setInput(e.target.value);
+            // Auto-resize textarea
+            e.target.style.height = 'auto';
+            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Ask about the trip or request changes..."
-          rows={2}
+          rows={1}
           disabled={loading}
         />
         <button

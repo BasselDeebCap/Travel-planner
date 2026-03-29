@@ -257,6 +257,9 @@
   font-family: inherit;
   outline: none;
   transition: border-color 0.2s;
+  min-height: 38px;
+  max-height: 120px;
+  overflow-y: auto;
 }
 
 .chat-input-area textarea:focus {
