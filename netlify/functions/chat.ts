@@ -117,15 +117,15 @@ export default async function handler(req: Request): Promise<Response> {
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-      status: 400,
+    return new Response(JSON.stringify({ content: '⚠️ Invalid request format.' }), {
+      status: 200,
       headers,
     });
   }
 
   if (!Array.isArray(body.messages) || body.messages.length === 0) {
-    return new Response(JSON.stringify({ error: 'Messages array required' }), {
-      status: 400,
+    return new Response(JSON.stringify({ content: '⚠️ No messages provided.' }), {
+      status: 200,
       headers,
     });
   }

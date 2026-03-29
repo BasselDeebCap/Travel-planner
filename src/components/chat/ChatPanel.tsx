@@ -125,15 +125,20 @@ export default function ChatPanel({ expanded, onToggleExpand, planContext, onApp
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMsg].map(m => ({
-            role: m.role,
-            content: m.content,
-          })),
+          messages: [...messages, userMsg]
+            .filter(m => m.id !== 'welcome')
+            .map(m => ({
+              role: m.role,
+              content: m.content,
+            })),
           planContext,
         }),
       });
 
       if (!response.ok) {
+        // Try to read the error body
+        const errBody = await response.text();
+        console.error('Chat function error:', response.status, errBody);
         throw new Error(`Server error: ${response.status}`);
       }
 
@@ -152,13 +157,14 @@ export default function ChatPanel({ expanded, onToggleExpand, planContext, onApp
       };
 
       setMessages(prev => [...prev, assistantMsg]);
-    } catch {
+    } catch (err) {
+      console.error('Chat error:', err);
       setMessages(prev => [
         ...prev,
         {
           id: `error-${Date.now()}`,
           role: 'assistant',
-          content: '⚠️ Could not reach the AI service. Make sure the GEMINI_API_KEY environment variable is set in your Netlify dashboard and redeploy.',
+          content: `⚠️ Something went wrong: ${err instanceof Error ? err.message : 'Could not reach the AI service'}. Check your browser console for details.`,
           timestamp: Date.now(),
         },
       ]);
